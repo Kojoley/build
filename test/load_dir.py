@@ -11,7 +11,7 @@ import stat
 import string
 
 def usage():
-    print "usage: load_dir.py directory"
+    print("usage: load_dir.py directory")
 
 
 def remove_first_component(path):
@@ -28,11 +28,10 @@ def create_file(arg, dirname, fnames):
     for n in fnames:
         path = os.path.join(dirname, n)
         if not os.path.isdir(path):
-            print "t.write(\"%s\", \"\"\"" % (remove_first_component(path),),
-            f = open(path, "r")
-            for l in f:
-                print l,
-            print '\n""")\n'
+            sys.stdout.write('t.write("%s", """' % remove_first_component(path))
+            with open(path, "r") as f:
+                sys.stdout.write(f.read())
+            print('""")\n')
 
 
 header = """#!/usr/bin/python
@@ -64,17 +63,17 @@ def main():
         path = sys.argv[1]
 
         if not os.access(path, os.F_OK):
-            print "Path '%s' does not exist" % (path,)
+            print("Path '%s' does not exist" % path)
             sys.exit(1)
 
         if not os.path.isdir(path):
-            print "Path '%s' is not a directory" % (path,)
+            print("Path '%s' is not a directory" % path)
 
-        print header
+        print(header)
 
         os.path.walk(path, create_file, None)
 
-        print footer
+        print(footer)
 
 
 if __name__ == '__main__':

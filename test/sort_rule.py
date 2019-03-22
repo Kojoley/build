@@ -63,19 +63,15 @@ def testSORTDuration():
         use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")
-    print >> f, "data = "
-    for i in range(0, 20000):
-        if i % 2:
-            print >> f, '"aaa"'
-        else:
-            print >> f, '"bbb"'
-    print >> f, """;
+    f.write("data = \n")
+    f.write('"aaa"\n"bbb"\n' * 10000)
+    f.write(""";
 
 ECHO "starting up" ;
 sorted = [ SORT $(data) ] ;
 ECHO "done" ;
 NOCARE all ;
-"""
+""")
     f.close()
 
     t.run_build_system(expected_duration=1)

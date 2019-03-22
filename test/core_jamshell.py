@@ -37,7 +37,7 @@ else
     JAMSHELL on test-py = $(PYTHON) -c ;
 }
 ACTION on test-py = "
-print \\\",\\\".join([str(x) for x in range(3)])
+print(\\\",\\\".join([str(x) for x in range(3)]))
 " ;
 run test-py ;
 

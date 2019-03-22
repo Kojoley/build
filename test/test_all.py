@@ -52,7 +52,7 @@ def run_tests(critical_tests, other_tests):
 
     for test in all_tests:
         if not xml:
-            print("%%-%ds :" % max_test_name_len % test),
+            sys.stdout.write("%%-%ds : " % max_test_name_len % test)
 
         passed = 0
         try:
@@ -101,16 +101,16 @@ def run_tests(critical_tests, other_tests):
             rs = "succeed"
             if not passed:
                 rs = "fail"
-            print """
+            print("""
 <test-log library="build" test-name="%s" test-type="run" toolset="%s" test-program="%s" target-directory="%s">
 <run result="%s">""" % (test, toolset, "tools/build/v2/test/" + test + ".py",
-                "boost/bin.v2/boost.build.tests/" + toolset + "/" + test, rs)
+                "boost/bin.v2/boost.build.tests/" + toolset + "/" + test, rs))
             if not passed:
                 BoostBuild.flush_annotations(1)
-            print """
+            print("""
 </run>
 </test-log>
-"""
+""")
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
         BoostBuild.clear_annotations()
 
@@ -119,11 +119,11 @@ def run_tests(critical_tests, other_tests):
         open("test_results.txt", "w").close()
 
     if not xml:
-        print """
+        print("""
         === Test summary ===
         PASS: %d
         FAIL: %d
-        """ % (pass_count, failures_count)
+        """ % (pass_count, failures_count))
 
     # exit with failure with failures
     if failures_count > 0:

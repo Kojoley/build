@@ -74,7 +74,7 @@ if os.name == 'nt':
 else:
     action = 'echo "void g() {}" > "$(<)"'
 def f(*args):
-    print "Generating a CPP file..."
+    print("Generating a CPP file...")
 
 get_manager().engine().register_action("mygen.generate-a-cpp-file", action,
     function=f)

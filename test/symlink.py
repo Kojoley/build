@@ -12,7 +12,7 @@ import BoostBuild
 
 
 if os.name != 'posix':
-    print "The symlink tests can be run on posix only."
+    print("The symlink tests can be run on posix only.")
     import sys
     sys.exit(1)
 

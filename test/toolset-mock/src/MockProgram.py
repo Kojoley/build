@@ -178,13 +178,13 @@ def main():
     if result is not None:
         (stdout, outputs) = result
         if stdout is not None:
-            print stdout
+            print(stdout)
         for (file,id) in outputs:
             with open(file, "w") as f:
                 f.write(make_file_contents(id))
         exit(0)
     else:
-        print command_line
+        print(command_line)
         exit(1)
 
 # file should be the name of a file in the same directory
@@ -243,7 +243,7 @@ def verify_finalize():
         if not id in output_ids:
             verify_error("Input file does not exist: %s" % id)
     for error in verify_errors:
-        print "error: %s" % error
+        print("error: %s" % error)
     if len(verify_errors) != 0:
         return 1
     else:
