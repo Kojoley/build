@@ -476,7 +476,7 @@ class Tester(TestCmd.TestCmd):
             kw["chdir"] = subdir
             self.last_program_invocation = kw["program"]
             build_time_start = time.time()
-            apply(TestCmd.TestCmd.run, [self], kw)
+            TestCmd.TestCmd.run(self, **kw)
             build_time_finish = time.time()
         except:
             self.dump_stdio()

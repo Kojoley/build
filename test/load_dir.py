@@ -21,7 +21,7 @@ def remove_first_component(path):
         if not s[0]:
             break
         result[:1] = list(s)
-    return apply(os.path.join, result[1:])
+    return os.path.join(*result[1:])
 
 
 def create_file(arg, dirname, fnames):

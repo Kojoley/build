@@ -385,7 +385,7 @@ class TestCmd:
 
         """
         if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+            file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'r':
@@ -491,7 +491,7 @@ class TestCmd:
             if sub is None:
                 continue
             if type(sub) is ListType:
-                sub = apply(os.path.join, tuple(sub))
+                sub = os.path.join(*sub)
             new = os.path.join(self.workdir, sub)
             try:
                 os.mkdir(new)
@@ -510,7 +510,7 @@ class TestCmd:
 
         """
         if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+            file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         os.unlink(file)
@@ -558,7 +558,7 @@ class TestCmd:
         directory name with the specified arguments using os.path.join().
 
         """
-        return apply(os.path.join, (self.workdir,) + tuple(args))
+        return os.path.join(self.workdir, *args)
 
     def writable(self, top, write):
         """
@@ -597,7 +597,7 @@ class TestCmd:
 
         """
         if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+            file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'w':
