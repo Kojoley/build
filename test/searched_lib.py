@@ -10,7 +10,6 @@
 
 import BoostBuild
 import os
-import string
 
 t = BoostBuild.Tester(use_test_config=False)
 
@@ -170,7 +169,7 @@ lib foobar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foobar") == -1)
+t.fail_test("foobar" not in t.stdout())
 
 
 # Make sure plain "lib foo bar ; " works.
@@ -180,7 +179,7 @@ lib foo bar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foo") == -1)
-t.fail_test(string.find(t.stdout(), "bar") == -1)
+t.fail_test("foo" not in t.stdout())
+t.fail_test("bar" not in t.stdout())
 
 t.cleanup()

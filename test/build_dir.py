@@ -9,7 +9,6 @@
 # attribute.
 
 import BoostBuild
-import string
 import os
 
 t = BoostBuild.Tester(use_test_config=False)
@@ -61,8 +60,8 @@ t.write("jamroot.jam", "")
 
 # Test that we get an error when no project id is specified.
 t.run_build_system(["--build-dir=foo"])
-t.fail_test(string.find(t.stdout(),
-                   "warning: the --build-dir option will be ignored") == -1)
+t.fail_test("warning: the --build-dir option will be ignored"
+            not in t.stdout())
 
 t.write("jamroot.jam", """\
 project foo ;
@@ -98,10 +97,10 @@ t.write("jamroot.jam", """\
 project foo : build-dir %s ;
 exe a : a.cpp ;
 build-project sub ;
-""" % string.replace(os.getcwd(), '\\', '\\\\'))
+""" % os.getcwd().replace('\\', '\\\\'))
 
 t.run_build_system(["--build-dir=build"], status=1)
-t.fail_test(string.find(t.stdout(),
-    "Absolute directory specified via 'build-dir' project attribute") == -1)
+t.fail_test("Absolute directory specified via 'build-dir' project attribute"
+            not in t.stdout())
 
 t.cleanup()

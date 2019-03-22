@@ -42,10 +42,9 @@ t.copy("lib/jamfile3.jam", "lib/jamfile.jam")
 
 # Link-compatibility check for rtti is disabled...
 #t.run_build_system(status=None)
-#import string
-#t.fail_test(string.find(t.stdout(),
+#t.fail_test(not t.stdout().startswith(
 #"""warning: targets produced from b.obj are link incompatible
-#warning: with main target a.exe""") !=-0)
+#warning: with main target a.exe"""))
 
 # Test that if we specified composite property in target reference, everything
 # works OK.

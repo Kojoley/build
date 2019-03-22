@@ -8,7 +8,6 @@
 # Test main target alternatives.
 
 import BoostBuild
-import string
 
 t = BoostBuild.Tester(use_test_config=False)
 

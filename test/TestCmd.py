@@ -48,8 +48,6 @@ as a full file system or incorrect permissions).
 #         http://www.boost.org/LICENSE_1_0.txt)
 
 
-from string import join, split
-
 __author__ = "Steven Knight <knight@baldmt.com>"
 __revision__ = "TestCmd.py 0.D002 2001/08/31 14:56:12 software"
 __version__ = "0.02"
@@ -117,7 +115,7 @@ def fail_test(self=None, condition=True, function=None, skip=0):
     sep = " "
     if not self is None:
         if self.program:
-            of = " of " + join(self.program, " ")
+            of = " of " + " ".join(self.program)
             sep = "\n\t"
         if self.description:
             desc = " [" + self.description + "]"
@@ -188,9 +186,9 @@ def match_exact(lines=None, matches=None):
 
     """
     if not type(lines) is ListType:
-        lines = split(lines, "\n")
+        lines = lines.split("\n")
     if not type(matches) is ListType:
-        matches = split(matches, "\n")
+        matches = matches.split("\n")
     if len(lines) != len(matches):
         return
     for i in range(len(lines)):
@@ -214,9 +212,9 @@ def match_re(lines=None, res=None):
 
     """
     if not type(lines) is ListType:
-        lines = split(lines, "\n")
+        lines = lines.split("\n")
     if not type(res) is ListType:
-        res = split(res, "\n")
+        res = res.split("\n")
     for i in range(min(len(lines), len(res))):
         if not re.compile("^" + res[i] + "$").search(lines[i]):
             return MatchError("Mismatch at line %d\n- %s\n+ %s\n" %
@@ -422,7 +420,7 @@ class TestCmd:
         if arguments:
             cmd += arguments.split(" ")
         if self.verbose:
-            sys.stderr.write(join(cmd, " ") + "\n")
+            sys.stderr.write(" ".join(cmd) + "\n")
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
             universal_newlines=universal_newlines)

@@ -7,7 +7,6 @@
 # This tests the "existing" and "updated" modifiers on actions.
 
 import BoostBuild
-import string
 
 t = BoostBuild.Tester(pass_toolset=0)
 
@@ -35,17 +34,17 @@ t.write("file.jam", code)
 t.write("a-1", "")
 
 t.run_build_system("-ffile.jam")
-t.fail_test(string.strip(t.read("list")) != "a-1")
+t.fail_test(t.read("list").strip() != "a-1")
 t.rm(["a-3", "list"])
 
-code = string.replace(code, "existing", "updated")
+code = code.replace("existing", "updated")
 t.write("file.jam", code)
 t.run_build_system("-ffile.jam")
-t.fail_test(string.strip(t.read("list")) != "a-3")
+t.fail_test(t.read("list").strip() != "a-3")
 
-code = string.replace(code, "updated", "existing updated")
+code = code.replace("updated", "existing updated")
 t.write("file.jam", code)
 t.run_build_system("-ffile.jam")
-t.fail_test(string.strip(t.read("list")) != "a-1 a-3")
+t.fail_test(t.read("list").strip() != "a-1 a-3")
 
 t.cleanup()

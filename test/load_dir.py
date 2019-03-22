@@ -8,7 +8,6 @@ structure during testing. Assumes that the instance of Tester is called 't'.
 import sys
 import os
 import stat
-import string
 
 def usage():
     print("usage: load_dir.py directory")
