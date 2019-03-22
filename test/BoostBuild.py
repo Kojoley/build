@@ -37,13 +37,13 @@ annotations = []
 def print_annotation(name, value, xml):
     """Writes some named bits of information about the current test run."""
     if xml:
-        print escape(name) + " {{{"
-        print escape(value)
-        print "}}}"
+        print(escape(name) + " {{{")
+        print(escape(value))
+        print("}}}")
     else:
-        print name + " {{{"
-        print value
-        print "}}}"
+        print(name + " {{{")
+        print(value)
+        print("}}}")
 
 
 def flush_annotations(xml=0):
@@ -603,7 +603,7 @@ class Tester(TestCmd.TestCmd):
 
         if "--preserve" in sys.argv:
             print
-            print "*** Copying the state of working dir into 'failed_test' ***"
+            print("*** Copying the state of working dir into 'failed_test' ***")
             print
             path = os.path.join(self.original_workdir, "failed_test")
             if os.path.isdir(path):
@@ -611,8 +611,8 @@ class Tester(TestCmd.TestCmd):
             elif os.path.exists(path):
                 raise "Path " + path + " already exists and is not a directory"
             shutil.copytree(self.workdir, path)
-            print "The failed command was:"
-            print " ".join(self.last_program_invocation)
+            print("The failed command was:")
+            print(" ".join(self.last_program_invocation))
 
         if dump_stack:
             annotate_stack_trace()
@@ -742,7 +742,7 @@ class Tester(TestCmd.TestCmd):
     def expect_nothing_more(self):
         if not self.unexpected_difference.empty():
             annotation("failure", "Unexpected changes found")
-            output = StringIO.StringIO()
+            output = StringIO()
             self.unexpected_difference.pprint(output)
             annotation("unexpected changes", output.getvalue())
             self.fail_test(1)
@@ -777,10 +777,10 @@ class Tester(TestCmd.TestCmd):
                     matched, True)
 
         if not matched:
-            print "Expected:\n"
-            print content
-            print "Got:\n"
-            print actual
+            print("Expected:\n")
+            print(content)
+            print("Got:\n")
+            print(actual)
             self.fail_test(1)
 
     def maybe_do_diff(self, actual, expected, result=None):
