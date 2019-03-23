@@ -185,9 +185,9 @@ def match_exact(lines=None, matches=None):
     using newline characters contain exactly the same data.
 
     """
-    if not type(lines) is ListType:
+    if not isinstance(lines, list):
         lines = lines.split("\n")
-    if not type(matches) is ListType:
+    if not isinstance(matches, list):
         matches = matches.split("\n")
     if len(lines) != len(matches):
         return
@@ -211,9 +211,9 @@ def match_re(lines=None, res=None):
     res parameter as regular expressions.
 
     """
-    if not type(lines) is ListType:
+    if not isinstance(lines, list):
         lines = lines.split("\n")
-    if not type(res) is ListType:
+    if not isinstance(res, list):
         res = res.split("\n")
     for i in range(min(len(lines), len(res))):
         if not re.compile("^" + res[i] + "$").search(lines[i]):
@@ -382,7 +382,7 @@ class TestCmd:
         default is 'rb' (binary read).
 
         """
-        if type(file) is ListType:
+        if isinstance(file, list):
             file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
@@ -426,7 +426,7 @@ class TestCmd:
             universal_newlines=universal_newlines)
 
         if stdin:
-            if type(stdin) is ListType:
+            if isinstance(stdin, list):
                 stdin = "".join(stdin)
         out, err = p.communicate(stdin)
         self._stdout.append(out)
@@ -488,7 +488,7 @@ class TestCmd:
         for sub in subdirs:
             if sub is None:
                 continue
-            if type(sub) is ListType:
+            if isinstance(sub, list):
                 sub = os.path.join(*sub)
             new = os.path.join(self.workdir, sub)
             try:
@@ -507,7 +507,7 @@ class TestCmd:
         unless it is an absolute path name.
 
         """
-        if type(file) is ListType:
+        if isinstance(file, list):
             file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
@@ -594,7 +594,7 @@ class TestCmd:
         and must begin with a 'w'. The default is 'wb' (binary write).
 
         """
-        if type(file) is ListType:
+        if isinstance(file, list):
             file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)

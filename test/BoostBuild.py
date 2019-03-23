@@ -23,7 +23,6 @@ import tempfile
 import time
 import traceback
 import tree
-import types
 
 from xml.sax.saxutils import escape
 
@@ -388,7 +387,7 @@ class Tester(TestCmd.TestCmd):
                 os.utime(path, None)
 
     def rm(self, names):
-        if not type(names) == types.ListType:
+        if not isinstance(names, list):
             names = [names]
 
         if names == ["."]:
