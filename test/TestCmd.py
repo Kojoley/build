@@ -572,8 +572,8 @@ class TestCmd:
                 st = os.stat(fullname)
                 os.chmod(fullname, arg(st[stat.ST_MODE]))
 
-        _mode_writable = lambda mode: stat.S_IMODE(mode|0200)
-        _mode_non_writable = lambda mode: stat.S_IMODE(mode&~0200)
+        _mode_writable = lambda mode: stat.S_IMODE(mode|stat.S_IWRITE)
+        _mode_non_writable = lambda mode: stat.S_IMODE(mode&~stat.S_IWRITE)
 
         if write:
             f = _mode_writable

@@ -15,6 +15,7 @@ import os
 import os.path
 import re
 import shutil
+import stat
 import StringIO
 import subprocess
 import sys
@@ -346,10 +347,11 @@ class Tester(TestCmd.TestCmd):
         shutil.copytree(tree_location, self.workdir)
 
         os.chdir(d)
+        write_all = stat.S_IWUSR | stat.S_IWGRP | stat.S_IWGRP | stat.S_IWOTH
         def make_writable(unused, dir, entries):
             for e in entries:
                 name = os.path.join(dir, e)
-                os.chmod(name, os.stat(name).st_mode | 0222)
+                os.chmod(name, os.stat(name).st_mode | write_all)
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content, wait=True):
