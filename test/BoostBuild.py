@@ -758,24 +758,22 @@ class Tester(TestCmd.TestCmd):
         actual = self.read(name)
         content = content.replace("$toolset", self.toolset + "*")
 
-        matched = False
         if exact:
             matched = fnmatch.fnmatch(actual, content)
         else:
-            def sorted_(x):
-                x.sort(lambda x, y: cmp(x.lower().replace("\\","/"), y.lower().replace("\\","/")))
-                return x
-            actual_ = map(lambda x: sorted_(x.split()), actual.splitlines())
-            content_ = map(lambda x: sorted_(x.split()), content.splitlines())
-            if len(actual_) == len(content_):
-                matched = map(
-                    lambda x, y: map(lambda n, p: fnmatch.fnmatch(n, p), x, y),
-                    actual_, content_)
-                matched = reduce(
-                    lambda x, y: x and reduce(
-                        lambda a, b: a and b,
-                    y, True),
-                    matched, True)
+            def canonicalize_slashes_(x):
+                return x.lower().replace("\\","/")
+
+            def check_(x, y):
+                x = sorted(x.split(), key=canonicalize_slashes_)
+                y = sorted(y.split(), key=canonicalize_slashes_)
+                return len(x) == len(y) and all(fnmatch.fnmatch(a, b)
+                                                for a, b in zip(x, y))
+
+            actual_ = actual.splitlines()
+            content_ = content.splitlines()
+            matched = (len(actual_) == len(content_) and
+                       all(check_(x, y) for x, y in zip(actual_, content_)))
 
         if not matched:
             print("Expected:\n")
@@ -1249,7 +1247,7 @@ class List:
 
 def _contains_lines(data, lines):
     data_line_count = len(data)
-    expected_line_count = reduce(lambda x, y: x + len(y), lines, 0)
+    expected_line_count = sum(map(len, lines), 0)
     index = 0
     for expected in lines:
         if expected_line_count > data_line_count - index:
