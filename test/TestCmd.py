@@ -387,7 +387,7 @@ class TestCmd:
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'r':
-            raise ValueError, "mode must begin with 'r'"
+            raise ValueError("mode must begin with 'r'")
         return open(file, mode).read()
 
     def run(self, program=None, arguments=None, chdir=None, stdin=None,
@@ -599,5 +599,5 @@ class TestCmd:
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'w':
-            raise ValueError, "mode must begin with 'w'"
+            raise ValueError("mode must begin with 'w'")
         open(file, mode).write(content)
