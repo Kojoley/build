@@ -347,11 +347,10 @@ class Tester(TestCmd.TestCmd):
 
         os.chdir(d)
         write_all = stat.S_IWUSR | stat.S_IWGRP | stat.S_IWGRP | stat.S_IWOTH
-        def make_writable(unused, dir, entries):
-            for e in entries:
-                name = os.path.join(dir, e)
-                os.chmod(name, os.stat(name).st_mode | write_all)
-        os.path.walk(".", make_writable, None)
+        for root, dirs, files in os.walk("."):
+            for name in files:
+                path = os.path.join(root, name)
+                os.chmod(path, os.stat(path).st_mode | write_all)
 
     def write(self, file, content, wait=True):
         nfile = self.native_file_name(file)

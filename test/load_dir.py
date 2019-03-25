@@ -70,7 +70,8 @@ def main():
 
         print(header)
 
-        os.path.walk(path, create_file, None)
+        for root, dirs, files in os.walk(path):
+            create_file(None, root, files)
 
         print(footer)
 

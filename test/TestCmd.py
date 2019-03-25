@@ -580,7 +580,8 @@ class TestCmd:
         else:
             f = _mode_non_writable
         try:
-            os.path.walk(top, _walk_chmod, f)
+            for root, dirs, files in os.walk(top):
+                _walk_chmod(f, root, files)
         except:
             pass  # Ignore any problems changing modes.
 
