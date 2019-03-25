@@ -10,7 +10,7 @@ import BoostBuild
 
 
 def simple_args(start, finish):
-    return " : ".join("%d" % x for x in xrange(start, finish + 1))
+    return " : ".join(map(str, range(start, finish + 1)))
 
 
 def test(t, type, input, output, status=0):

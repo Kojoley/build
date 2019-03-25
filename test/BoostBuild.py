@@ -1263,7 +1263,7 @@ def _contains_lines(data, lines):
 def _match_line_sequence(data, start, end, lines):
     if not lines:
         return start
-    for index in xrange(start, end - len(lines) + 1):
+    for index in range(start, end - len(lines) + 1):
         data_index = index
         for expected in lines:
             if not fnmatch.fnmatch(data[data_index], expected):
