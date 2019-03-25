@@ -99,11 +99,13 @@ class TreeDifference:
 
     def ignore_directories(self):
         """Removes directories from our lists of found differences."""
-        not_dir = lambda x : x[-1] != "/"
-        self.added_files = filter(not_dir, self.added_files)
-        self.removed_files = filter(not_dir, self.removed_files)
-        self.modified_files = filter(not_dir, self.modified_files)
-        self.touched_files = filter(not_dir, self.touched_files)
+        def files_only(paths):
+            return [x for x in paths if x[-1] != "/"]
+
+        self.added_files = files_only(self.added_files)
+        self.removed_files = files_only(self.removed_files)
+        self.modified_files = files_only(self.modified_files)
+        self.touched_files = files_only(self.touched_files)
 
     def pprint(self, file=sys.stdout):
         file.write("Added files   : %s\n" % self.added_files)

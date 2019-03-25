@@ -152,7 +152,7 @@ def prepare_library_prefix(toolset, target_os=default_os):
 
 def re_remove(sequence, regex):
     me = re.compile(regex)
-    result = filter(lambda x: me.match(x), sequence)
+    result = [x for x in sequence if me.match(x)]
     if not result:
         raise ValueError()
     for r in result:
@@ -1010,7 +1010,7 @@ class Tester(TestCmd.TestCmd):
 
     def __ignore_elements(self, list, wildcard):
         """Removes in-place 'list' elements matching the given 'wildcard'."""
-        list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
+        list[:] = [e for e in list if not fnmatch.fnmatch(e, wildcard)]
 
     def __makedirs(self, path, wait):
         """
