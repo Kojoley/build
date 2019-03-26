@@ -848,7 +848,7 @@ class Tester(TestCmd.TestCmd):
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
         r = map(lambda x, t=self.toolset: x.replace("$toolset", t + "*"), r)
-        return r
+        return list(r)
     
     def adjust_name(self, name):
         return self.adjust_names(name)[0]

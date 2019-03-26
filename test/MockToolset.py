@@ -97,11 +97,11 @@ class MockInfo(object):
       options.includes = []
     if expected_options.includes is None:
       expected_options.includes = []
-    if map(adjust_path, options.includes) != \
-        map(adjust_path, expected_options.includes):
+    includes = list(map(adjust_path, options.includes))
+    expected_includes = list(map(adjust_path, expected_options.includes))
+    if includes != expected_includes:
       if self.verbose:
-        print("    Failed to match -I ", map(adjust_path, options.includes),
-          " != ", map(adjust_path, expected_options.includes))
+        print("    Failed to match -I ", includes, " != ", expected_includes)
       return False
 
     if options.defines is None:
@@ -118,11 +118,11 @@ class MockInfo(object):
       options.library_path = []
     if expected_options.library_path is None:
       expected_options.library_path = []
-    if map(adjust_path, options.library_path) != \
-        map(adjust_path, expected_options.library_path):
+    libpath = list(map(adjust_path, options.library_path))
+    expected_libpath = list(map(adjust_path, expected_options.library_path))
+    if libpath != expected_libpath:
       if self.verbose:
-        print("    Failed to match -L ", map(adjust_path, options.library_path),
-          " != ", map(adjust_path, expected_options.library_path))
+        print("    Failed to match -L ", libpath, " != ", expected_libpath)
       return False
 
     if options.static_libraries != expected_options.static_libraries:
