@@ -470,6 +470,18 @@ rule configure-version-specific ( toolset : version : conditions )
         }
     }
 
+    # 10.0 (VS2010) has undocumented switch that will become /Zo in VS2013
+    if ! [ version.version-less $(version-tuple) : 10 ] && [ version.version-less $(version-tuple) : 12 ]
+    {
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<debug-symbols>on : "/d2Zi+" ;
+    }
+    # 12.0 (VS2013 Update 3) introduced /Zo but it is not enabled by default
+    # https://docs.microsoft.com/en-us/cpp/build/reference/zo-enhance-optimized-debugging?view=msvc-140
+    if ! [ version.version-less $(version-tuple) : 12 ] && [ version.version-less $(version-tuple) : 14 ]
+    {
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<debug-symbols>on : "/Zo" ;
+    }
+
     # 12.0 (VS2013 Update 2) introduced /Zc:inline opt-in standard conformance
     # compiler flag that also similar to linker /opt:ref removes unreferenced
     # variables and functions that have internal linkage
