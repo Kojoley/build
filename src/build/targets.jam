@@ -1005,19 +1005,7 @@ rule apply-default-build ( property-set : default-build )
 #
 rule common-properties ( build-request requirements )
 {
-    # For optimization, we add free requirements directly, without using a
-    # complex algorithm. This gives the complex algorithm a better chance of
-    # caching results.
-    local free = [ $(requirements).free ] ;
-    local non-free = [ property-set.create [ $(requirements).base ]
-        [ $(requirements).incidental ] ] ;
-
-    local key = .rp.$(build-request)-$(non-free) ;
-    if ! $($(key))
-    {
-        $(key) = [ common-properties2 $(build-request) $(non-free) ] ;
-    }
-    return [ $($(key)).add-raw $(free) ] ;
+    return [ common-properties2 $(build-request) $(requirements) ] ;
 }
 
 
