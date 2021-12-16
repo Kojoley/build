@@ -664,6 +664,7 @@ class main-target : abstract-target
         #    lib l : l.cpp : <variant>debug ;
         #    lib l : l_opt.cpp : <variant>release ;
         # will not work unless we add default value <variant>debug.
+        # TODO: why there is no `feature.expand` call?
         property-set = [ $(property-set).add-defaults ] ;
 
         # The algorithm: we keep the current best viable alternative. When we
