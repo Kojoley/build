@@ -678,10 +678,8 @@ class main-target : abstract-target
 
         local best ;
         local best-properties ;
-        local worklist = $(self.alternatives) ;
-        while $(worklist)
+        for local v in $(self.alternatives)
         {
-            local v = $(worklist[1]) ;
             local properties = [ $(v).match $(property-set) $(debug) ] ;
 
             if $(properties) != no-match
@@ -712,7 +710,6 @@ class main-target : abstract-target
                     }
                 }
             }
-            worklist = $(worklist[2-]) ;
         }
         return $(best) ;
     }
