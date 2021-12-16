@@ -660,6 +660,11 @@ class main-target : abstract-target
     #
     rule select-alternatives ( property-set debug ? )
     {
+        if ! $(self.alternatives[2-])
+        {
+            return $(self.alternatives) ;
+        }
+
         # When selecting alternatives we have to consider defaults, for example:
         #    lib l : l.cpp : <variant>debug ;
         #    lib l : l_opt.cpp : <variant>release ;
@@ -673,54 +678,46 @@ class main-target : abstract-target
 
         local best ;
         local best-properties ;
-
-        if $(self.alternatives[2-])
+        local bad ;
+        local worklist = $(self.alternatives) ;
+        while $(worklist) && ! $(bad)
         {
-            local bad ;
-            local worklist = $(self.alternatives) ;
-            while $(worklist) && ! $(bad)
-            {
-                local v = $(worklist[1]) ;
-                local properties = [ $(v).match $(property-set) $(debug) ] ;
+            local v = $(worklist[1]) ;
+            local properties = [ $(v).match $(property-set) $(debug) ] ;
 
-                if $(properties) != no-match
+            if $(properties) != no-match
+            {
+                if ! $(best)
                 {
-                    if ! $(best)
+                    best = $(v) ;
+                    best-properties = $(properties) ;
+                }
+                else
+                {
+                    if $(properties) = $(best-properties)
+                    {
+                        bad = true ;
+                    }
+                    else if $(properties) in $(best-properties)
+                    {
+                        # Do nothing, this alternative is worse
+                    }
+                    else if $(best-properties) in $(properties)
                     {
                         best = $(v) ;
                         best-properties = $(properties) ;
                     }
                     else
                     {
-                        if $(properties) = $(best-properties)
-                        {
-                            bad = true ;
-                        }
-                        else if $(properties) in $(best-properties)
-                        {
-                            # Do nothing, this alternative is worse
-                        }
-                        else if $(best-properties) in $(properties)
-                        {
-                            best = $(v) ;
-                            best-properties = $(properties) ;
-                        }
-                        else
-                        {
-                            bad = true ;
-                        }
+                        bad = true ;
                     }
                 }
-                worklist = $(worklist[2-]) ;
             }
-            if ! $(bad)
-            {
-                return $(best) ;
-            }
+            worklist = $(worklist[2-]) ;
         }
-        else
+        if ! $(bad)
         {
-            return $(self.alternatives) ;
+            return $(best) ;
         }
     }
 
