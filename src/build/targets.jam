@@ -678,9 +678,8 @@ class main-target : abstract-target
 
         local best ;
         local best-properties ;
-        local bad ;
         local worklist = $(self.alternatives) ;
-        while $(worklist) && ! $(bad)
+        while $(worklist)
         {
             local v = $(worklist[1]) ;
             local properties = [ $(v).match $(property-set) $(debug) ] ;
@@ -696,7 +695,7 @@ class main-target : abstract-target
                 {
                     if $(properties) = $(best-properties)
                     {
-                        bad = true ;
+                        return ;  # can't be multiple exact matches
                     }
                     else if $(properties) in $(best-properties)
                     {
@@ -709,16 +708,13 @@ class main-target : abstract-target
                     }
                     else
                     {
-                        bad = true ;
+                        return ;  # how we ended up here?
                     }
                 }
             }
             worklist = $(worklist[2-]) ;
         }
-        if ! $(bad)
-        {
-            return $(best) ;
-        }
+        return $(best) ;
     }
 
     # Features are relevant here if they could affect alternative
