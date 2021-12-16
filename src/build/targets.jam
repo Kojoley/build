@@ -682,33 +682,34 @@ class main-target : abstract-target
         {
             local properties = [ $(v).match $(property-set) $(debug) ] ;
 
-            if $(properties) != no-match
+            if $(properties) = no-match
             {
-                if ! $(best)
-                {
-                    best = $(v) ;
-                    best-properties = $(properties) ;
-                }
-                else
-                {
-                    if $(properties) = $(best-properties)
-                    {
-                        return ;  # can't be multiple exact matches
-                    }
-                    else if $(properties) in $(best-properties)
-                    {
-                        # Do nothing, this alternative is worse
-                    }
-                    else if $(best-properties) in $(properties)
-                    {
-                        best = $(v) ;
-                        best-properties = $(properties) ;
-                    }
-                    else
-                    {
-                        return ;  # how we ended up here?
-                    }
-                }
+                continue ;
+            }
+
+            if ! $(best)
+            {
+                best = $(v) ;
+                best-properties = $(properties) ;
+                continue ;
+            }
+
+            if $(properties) = $(best-properties)
+            {
+                return ;  # can't be multiple exact matches
+            }
+            else if $(properties) in $(best-properties)
+            {
+                # Do nothing, this alternative is worse
+            }
+            else if $(best-properties) in $(properties)
+            {
+                best = $(v) ;
+                best-properties = $(properties) ;
+            }
+            else
+            {
+                return ;  # how we ended up here?
             }
         }
         return $(best) ;
