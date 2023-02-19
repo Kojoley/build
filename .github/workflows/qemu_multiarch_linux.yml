@@ -69,9 +69,6 @@ jobs:
           sudo apt-get -o Acquire::Retries=3 update
           sudo apt-get -o Acquire::Retries=3 -y install qemu-user-static
           docker pull "${{ matrix.image }}"
-      - name: "Setup"
-        run: |
-          env | grep -v '^#' | xargs > docker-run-action.env
       - name: "Info"
         run: |
           echo ">>>>>  WORKDIR: ${{ github.workspace }}"
@@ -81,12 +78,6 @@ jobs:
         with:
           image: ${{ matrix.image }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }}
-            -e "CXX=${{ matrix.cxx }}"
-            -e "CXXFLAGS=${{ matrix.cxxflags }}"
-            -e "PACKAGES=${{ matrix.packages }}"
-            -e "LLVM_OS=${{ matrix.llvm_os }}"
-            -e "LLVM_VER=${{ matrix.llvm_ver }}"
-            -e "TOOLSET=${{ matrix.toolset }}"
           run: |
             set -e
             uname -a
