@@ -57,17 +57,10 @@ jobs:
               image: "lv2plugin/debian-x32",
               cxx: "g++",
               toolset: "gcc",
-              packages: "dash",
+              packages: "dash build-essential",
             }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    env:
-      CXX: ${{ matrix.cxx }}
-      CXXFLAGS: ${{ matrix.cxxflags }}
-      PACKAGES: ${{ matrix.packages }}
-      LLVM_OS: ${{ matrix.llvm_os }}
-      LLVM_VER: ${{ matrix.llvm_ver }}
-      TOOLSET: ${{ matrix.toolset }}
     steps:
       - name: "Checkout"
         uses: actions/checkout@master
@@ -81,18 +74,25 @@ jobs:
           env | grep -v '^#' | xargs > docker-run-action.env
       - name: "Info"
         run: |
-          echo ">>>>> ENV:"
-          cat docker-run-action.env
           echo ">>>>>  WORKDIR: ${{ github.workspace }}"
           ls -laF ${{ github.workspace }}
       - name: "Run"
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.image }}
-          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file docker-run-action.env
+          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }}
+            -e "CXX=${{ matrix.cxx }}"
+            -e "CXXFLAGS=${{ matrix.cxxflags }}"
+            -e "PACKAGES=${{ matrix.packages }}"
+            -e "LLVM_OS=${{ matrix.llvm_os }}"
+            -e "LLVM_VER=${{ matrix.llvm_ver }}"
+            -e "TOOLSET=${{ matrix.toolset }}"
           run: |
             set -e
             uname -a
+            echo "::group::ENV"
+              env
+            echo "::endgroup::"
             echo ">>>>>"
             echo ">>>>> Install.."
             echo ">>>>>"
