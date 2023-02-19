@@ -60,7 +60,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.image }}
-          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file $GITHUB_ENV
+          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file ${{ env.GITHUB_ENV }}
           run: |
             set -e
             uname -a
