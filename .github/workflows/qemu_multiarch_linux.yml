@@ -61,6 +61,13 @@ jobs:
             }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    env:
+      CXX: ${{ matrix.cxx }}
+      CXXFLAGS: ${{ matrix.cxxflags }}
+      PACKAGES: ${{ matrix.packages }}
+      LLVM_OS: ${{ matrix.llvm_os }}
+      LLVM_VER: ${{ matrix.llvm_ver }}
+      TOOLSET: ${{ matrix.toolset }}
     steps:
       - name: "Checkout"
         uses: actions/checkout@master
