@@ -11,7 +11,7 @@ fi
 OS_ISSUE=`cat /etc/issue | head -n1 | cut -d " " -f1`
 echo ">>>>> OS Issue: ${OS_ISSUE}"
 
-PACKAGES=${PACKAGES:-build-essential}
+PACKAGES=${PACKAGES:-build-essential dash}
 
 set -e
 echo ">>>>>"
