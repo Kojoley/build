@@ -54,13 +54,16 @@ jobs:
           docker pull "${{ matrix.image }}"
       - name: "Info"
         run: |
+          cp ${{ github.env }} docker-run-action.env
+          echo ">>>>> ENV:"
+          cat docker-run-action.env
           echo ">>>>>  WORKDIR: ${{ github.workspace }}"
           ls -laF ${{ github.workspace }}
       - name: "Run"
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.image }}
-          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file ${{ github.env }}
+          options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file docker-run-action.env
           run: |
             set -e
             uname -a
