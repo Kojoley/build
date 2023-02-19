@@ -57,6 +57,7 @@ jobs:
               image: "lv2plugin/debian-x32",
               cxx: "g++",
               toolset: "gcc",
+              packages: "dash",
             }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
