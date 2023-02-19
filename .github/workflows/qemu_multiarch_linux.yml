@@ -52,6 +52,12 @@ jobs:
               cxx: "g++",
               toolset: "gcc",
             }
+          - {
+              name: "Debian Sid (x32)",
+              image: "lv2plugin/debian-x32",
+              cxx: "g++",
+              toolset: "gcc",
+            }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     env:
