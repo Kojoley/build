@@ -533,7 +533,9 @@ class Tester(TestCmd.TestCmd):
             annotation("failure", '"%s" returned %d%s' % (kw["program"],
                 self.status, expect))
 
-            annotation("reason", "unexpected status returned by bjam")
+            annotation("reason", "unexpected status returned by b2")
+            annotation("STDERR", self.stderr())
+            annotation("STDOUT", self.stdout())
             self.fail_test(1)
 
         if stdout is not None and not match(self.stdout(), stdout):

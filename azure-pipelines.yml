@@ -110,16 +110,36 @@ stages:
     steps:
     - template: .ci/azp-macos-test.yml
 
-  - job: 'Linux_ASAN'
+  - job: 'UBASAN'
     strategy:
       matrix:
-        # Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        # Note: clang sanitizers need llvm-symbolizer to demangle stack traces
+        Linux Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}} llvm-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Linux GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Windows VS ${{variables.vs_latest}}: {TOOLSET: msvc, BOOTSTRAP_TOOLSET: "${{variables.vc_latest}}", VM_IMAGE: "${{variables.windows_latest_vm}}", B2_OPTS: runtime-link=static }
+        # Sanitizers are not implemented for clang-win in B2
+        #Windows Clang ${{variables.clang_latest}} (VS${{variables.vs_latest}}): {TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}"}
+        macOS Xcode ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
     steps:
-    - template: .ci/azp-linux-asan-test.yml
+    - bash: ./.ci/linux-cxx-install.sh
+      condition: eq(variables['Agent.OS'], 'Linux')
+      displayName: Install Toolset
+    - pwsh: '& ./bootstrap.$($IsWindows ? "bat" : "sh") $($env:BOOTSTRAP_TOOLSET ? $env:BOOTSTRAP_TOOLSET : $env:TOOLSET)'
+      displayName: Bootstrap
+    - pwsh: '& rm ./src/engine/$($IsWindows ? "b2.exe" : "b2" )'
+      displayName: Nuke ./src/engine/b2 executable
+    - bash: ./b2 variant=release debug-symbols=on lto=on address-sanitizer=on undefined-sanitizer=on ${TOOLSET:+toolset=$TOOLSET}
+                 b2-engine staging-prefix=src/engine b2-install-layout=portable $B2_OPTS
+      displayName: Build Sanitized B2
+    - pwsh: '& rm ./$($IsWindows ? "b2.exe" : "b2" )'
+      displayName: Nuke unsanitized ./b2 executable to be sure it would not be used
+    - pwsh: '$env:PATHEXT += ";.PY"; ./test_all.py $env:TOOLSET'
+      workingDirectory: test
+      displayName: Test
+
 
 - stage: Extra
   dependsOn: []
