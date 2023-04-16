@@ -128,7 +128,10 @@ stages:
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
+    variables:
+      ASAN_OPTIONS: check_initialization_order=true:strict_init_order=true:detect_stack_use_after_return=true:strict_string_checks=true
     steps:
+    - bash: echo $ASAN_OPTIONS
     - bash: ./.ci/linux-cxx-install.sh
       condition: eq(variables['Agent.OS'], 'Linux')
       displayName: Install Toolset
