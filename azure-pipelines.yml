@@ -368,6 +368,8 @@ stages:
     displayName: 'Release Linux'
     strategy:
       matrix:
+        1.82.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.81.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.80.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -397,11 +399,11 @@ stages:
         ./build.sh ${TOOLSET} --cxx=${CXX}
         ./b2 -v
       displayName: Build
+    - template: .ci/azp-download-boost.yml
     - bash: |
         set -e
         pushd ${HOME}
-        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
-        cd boost_${BOOST_VERSION_U}
+        cd boost-${BOOST_VERSION}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
@@ -414,6 +416,8 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.82.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+        1.81.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.80.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.79.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.78.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -442,11 +446,11 @@ stages:
         ./build.sh ${TOOLSET} --cxx=${CXX}
         ./b2 -v
       displayName: Build
+    - template: .ci/azp-download-boost.yml
     - bash: |
         set -e
         pushd ${HOME}
-        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
-        cd boost_${BOOST_VERSION_U}
+        cd boost-${BOOST_VERSION}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
@@ -459,6 +463,8 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.82.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: "${{variables.vc_latest}}"}
+        1.81.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: "${{variables.vc_latest}}"}
         1.80.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: "${{variables.vc_latest}}"}
         1.79.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: "${{variables.vc_latest}}"}
         1.78.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: "${{variables.vc_latest}}"}
@@ -482,11 +488,11 @@ stages:
         ./b2.exe -v
         cd ../..
       displayName: Build
+    - template: .ci/azp-download-boost.yml
     - powershell: |
         $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
         cd "${env:HOME}"
-        git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
-        cd "boost_${env:BOOST_VERSION_U}"
+        cd "boost-${env:BOOST_VERSION}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
