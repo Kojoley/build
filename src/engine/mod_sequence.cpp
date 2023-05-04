@@ -57,6 +57,41 @@ LIST * sequence_select_highest_ranked( FRAME * frame, int flags )
     return result;
 }
 
+LIST * sequence_filter(FRAME * frame, int flags)
+{
+    LIST * function = lol_get( frame->args, 0 );
+    LIST * sequence = lol_get( frame->args, 1 );
+    LIST * result = L0;
+    OBJECT * function_name = list_front( function );
+    LISTITER args_begin = list_next( list_begin( function ) ), args_end = list_end( function );
+    LISTITER iter = list_begin( sequence ), end = list_end( sequence );
+    RULE * rule = bindrule( function_name, frame->prev->module );
+
+    FRAME inner[1];
+
+	frame_init(inner);
+	inner->prev = frame;
+	inner->prev_user = frame->prev_user;
+	inner->module = frame->prev->module;
+    LIST * args = list_push_back( list_copy_range( function, args_begin, args_end ), nullptr );
+	OBJECT *& element = list_item( args, list_length( args ) - 1 );
+	lol_add( inner->args, args );
+
+	for (; iter != end; iter = list_next(iter))
+    {
+		element = object_copy( list_item(iter) );
+		LIST * filtered = evaluate_rule(rule, function_name, inner);
+		if ( !list_empty(filtered) )
+            result = list_push_back( result, element );
+		list_free( filtered );
+		element = nullptr;
+	}
+
+	frame_free(inner);
+
+    return result;
+}
+
 LIST * sequence_transform( FRAME * frame, int flags )
 {
     LIST * function = lol_get( frame->args, 0 );
@@ -157,6 +192,11 @@ void init_sequence()
         char const * args[] = { "elements", "*", ":", "rank", "*", 0 };
         declare_native_rule( "sequence", "select-highest-ranked", args,
                             sequence_select_highest_ranked, 1 );
+    }
+    {
+        char const * args[] = { "predicate", "+", ":", "sequence", "*", 0 };
+        declare_native_rule( "sequence", "filter", args,
+                            sequence_filter, 1 );
     }
     {
         char const * args[] = { "function", "+", ":", "sequence", "*", 0 };

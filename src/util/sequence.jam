@@ -34,6 +34,10 @@ rule filter ( predicate + : sequence * )
     return $(result) ;
 }
 
+if [ HAS_NATIVE_RULE sequence : filter : 1 ]
+{
+    NATIVE_RULE sequence : filter ;
+}
 
 # Return a new sequence consisting of [ $(function) $(e) ] for each element e of
 # $(sequence).
