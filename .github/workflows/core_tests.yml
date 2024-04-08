@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   freebsd:
-    name: freebsd ${{matrix.toolset}}
+    name: freebsd
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,12 +46,12 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py clang
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   openbsd:
-    name: openbsd ${{matrix.toolset}}
+    name: openbsd
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -63,12 +63,12 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg_add python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py clang
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   netbsd:
-    name: netbsd ${{matrix.toolset}}
+    name: netbsd
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -79,13 +79,13 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkg_add python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          prepare: /usr/sbin/pkg_add python3
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   solaris:
-    name: solaris ${{matrix.toolset}}
+    name: solaris
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -98,8 +98,8 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkgutil -y -i python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          prepare: pkgutil -y -i python33
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -116,7 +116,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -132,7 +132,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
+          prepare: pkg install python3
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
