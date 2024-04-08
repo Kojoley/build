@@ -72,7 +72,7 @@ jobs:
         run: ./b2 warnings=all warnings-as-errors=on variant=debug,release debug-symbols=off toolset=${{matrix.toolset}} b2
 
   freebsd:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: freebsd ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -83,13 +83,12 @@ jobs:
       - name: Test in FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   openbsd:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: openbsd ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -100,13 +99,12 @@ jobs:
       - name: Test in openbsd
         uses: vmactions/openbsd-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   netbsd:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: netbsd ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -117,13 +115,12 @@ jobs:
       - name: Test in netbsd
         uses: vmactions/netbsd-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   solaris:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: solaris ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -134,13 +131,12 @@ jobs:
       - name: Test in solaris
         uses: vmactions/solaris-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   dragonflybsd:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: dragonflybsd ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -151,13 +147,12 @@ jobs:
       - name: Test in dragonflybsd
         uses: vmactions/dragonflybsd-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
   omnios:
-    name: ${{matrix.vmos}} ${{matrix.toolset}}
+    name: omnios ${{matrix.toolset}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -168,7 +163,6 @@ jobs:
       - name: Test in omnios
         uses: vmactions/omnios-vm@v1
         with:
-          prepare: ./bootstrap.sh ${{matrix.toolset}}
-          run: ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
