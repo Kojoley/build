@@ -46,7 +46,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -63,7 +63,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg_add python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -80,7 +80,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg_add python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -99,7 +99,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkgutil -y -i python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -116,7 +116,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -133,6 +133,6 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
+          run: ./bootstrap.sh ${{matrix.toolset}} && cd test && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
