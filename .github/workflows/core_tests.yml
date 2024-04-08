@@ -43,6 +43,9 @@ jobs:
       - name: Test in FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkg install -y python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -57,6 +60,9 @@ jobs:
       - name: Test in openbsd
         uses: vmactions/openbsd-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkg_add python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -71,6 +77,9 @@ jobs:
       - name: Test in netbsd
         uses: vmactions/netbsd-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkg_add python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -87,6 +96,9 @@ jobs:
       - name: Test in solaris
         uses: vmactions/solaris-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkgutil -y -i python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -101,6 +113,9 @@ jobs:
       - name: Test in dragonflybsd
         uses: vmactions/dragonflybsd-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkg install -y python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -115,6 +130,9 @@ jobs:
       - name: Test in omnios
         uses: vmactions/omnios-vm@v1
         with:
+          usesh: true
+          copyback: false
+          prepare: pkg install -y python3
           run: ./bootstrap.sh ${{matrix.toolset}} && python3 ./test_all.py ${{matrix.toolset}}
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
