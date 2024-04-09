@@ -51,11 +51,13 @@ unit-test test : test.cpp ;
 
 
 test_dir('has space')
-# Windows versions are a huge mess, like in any other Microsoft product:
-# Windows 10, version 1903 codename 19H1, build number 10.0.18362
-# Windows 10, version 1607 codename Redstone 1, build number 10.0.14393
-if not hasattr(sys, 'getwindowsversion') or sys.getwindowsversion()[:3] >= (10, 0, 18362):
-    test_dir('uni\u2665code')
+
+if sys.getfilesystemencoding() != 'ascii':
+    # Windows versions are a huge mess, like in any other Microsoft product:
+    # Windows 10, version 1903 codename 19H1, build number 10.0.18362
+    # Windows 10, version 1607 codename Redstone 1, build number 10.0.14393
+    if not hasattr(sys, 'getwindowsversion') or sys.getwindowsversion()[:3] >= (10, 0, 18362):
+        test_dir('uni\u2665code')
 if not hasattr(sys, 'getwindowsversion') or sys.getwindowsversion()[:3] >= (10, 0, 14393):
     long_path = '/'.join(['a_very_very_long_path'] * (260 // 21 + 1))
     try:
