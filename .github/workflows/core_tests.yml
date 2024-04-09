@@ -97,7 +97,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkgutil -y -i python33 gcc5g++
+          prepare: pkgutil -y gcc5g++
           run: uname -a && ./bootstrap.sh && ./b2 -v && cd test && LC_ALL=C.UTF-8 PYTHONIOENCODING=utf-8:surrogateescape ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
