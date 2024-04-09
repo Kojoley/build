@@ -79,7 +79,7 @@ jobs:
         with:
           copyback: false
           prepare: pkg_add python311
-          run: ./bootstrap.sh && cd test && python3.11 ./test_all.py
+          run: uname -a && ./bootstrap.sh && ./b2 -v && cd test && python3.11 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
