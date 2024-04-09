@@ -409,7 +409,7 @@ if toolset.startswith("gcc") and os.name != "nt":
     tests.append("gcc_runtime")
 
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
-    if not sys.platform.startswith("freebsd"):
+    if not (toolset.startswith("gcc") and "bsd" in sys.platform):
         tests.append("pch")
     tests.append("feature_force_include")
 
