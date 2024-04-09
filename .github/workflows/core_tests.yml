@@ -84,7 +84,7 @@ jobs:
             #echo "::endgroup::"
 
   solaris:
-    name: solaris
+    name: solaris gcc
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -97,7 +97,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkgutil -y -i python33
+          prepare: pkgutil -y -i python33 gcc5g++
           run: ./bootstrap.sh && cd test && ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
@@ -122,6 +122,12 @@ jobs:
   omnios:
     name: omnios ${{matrix.toolset}}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolset:
+          - gcc7
+          - gcc13
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -131,7 +137,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkg install runtime/python-3* developer/gcc7
-          run: ./bootstrap.sh && cd test && ./test_all.py
+          prepare: pkg install runtime/python-3* developer/${{matrix.toolset}}
+          run: ./bootstrap.sh && ./b2 -v && cd test && ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
