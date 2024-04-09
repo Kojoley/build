@@ -98,7 +98,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkgutil -y -i python33 gcc5g++
-          run: ./bootstrap.sh && cd test && ./test_all.py
+          run: uname -a && ./bootstrap.sh && ./b2 -v && cd test && ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
