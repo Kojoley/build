@@ -46,7 +46,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: pkg install -y python3
-          run: ./bootstrap.sh && cd test && python3 ./test_all.py clang
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -62,8 +62,8 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkg_add python3
-          run: ./bootstrap.sh && cd test && python3 ./test_all.py clang
+          prepare: pkg_add python
+          run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
 
@@ -132,7 +132,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          prepare: pkg install python3
+          prepare: pkg install python
           run: ./bootstrap.sh && cd test && python3 ./test_all.py
             #echo "::group::Bootstrap"
             #echo "::endgroup::"
