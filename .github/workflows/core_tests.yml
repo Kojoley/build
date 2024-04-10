@@ -44,6 +44,7 @@ jobs:
           - mingw32
           - ucrt64
           - clang64
+          - msys
         toolset:
           - clang
           - gcc
