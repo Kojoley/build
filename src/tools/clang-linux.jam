@@ -135,6 +135,9 @@ toolset.flags clang-linux.compile INCLUDE-PCH : -include-pch ;
 # For clang, 'on' and 'full' are identical.
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
 
+# lld always comes with clang
+toolset.flags clang-linux.link OPTIONS <toolset>clang : -fuse-ld=lld ;
+
 # LTO
 toolset.flags clang-linux.compile OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
 toolset.flags clang-linux.link OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
