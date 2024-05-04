@@ -32,9 +32,8 @@ pr:
 
 variables:
 - { name: linux_latest_vm, value: 'ubuntu-22.04' }
-- { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '17' }
+- { name: clang_latest, value: '18' }
 - { name: clang_latest_libstdcxx, value: 9 }
 - { name: gcc_latest, value: '13' }
 - { name: vc_latest, value: 'vc143' }
@@ -44,9 +43,19 @@ variables:
 
 resources:
   containers:
+    - { container: gcc_latest, image: 'gcc:latest', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: clang_latest, image: 'chainguard/clang:latest', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: ubuntu_2404, image: 'ubuntu:24.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: ubuntu_2204, image: 'ubuntu:22.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1604, image: 'ubuntu:16.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_testing, image: 'debian:testing', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_12, image: 'debian:12', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_11, image: 'debian:11', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_10, image: 'debian:10', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_9, image: 'debian/eol:stretch', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: debian_8, image: 'debian/eol:jessie', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
 stages:
 
@@ -54,48 +63,13 @@ stages:
   dependsOn: []
   jobs:
 
-  - job: 'Linux_Default_Build'
-    strategy:
-      matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        ./.ci/linux-cxx-install.sh
-      displayName: Install
-    - bash: |
-        set -e
-        ./src/engine/build.sh --verbose
-      displayName: Build
-
-  - job: 'Linux_Clang_Only_Build'
-    strategy:
-      matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        ./.ci/linux-cxx-install.sh
-        sudo apt remove gcc g++
-      displayName: Install
-    - bash: |
-        set -e
-        ./src/engine/build.sh --verbose
-      displayName: Build
-
   - job: 'Linux_Latest'
     strategy:
       matrix:
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}-multilib", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}} libstdc++-${{variables.clang_latest_libstdcxx}}-dev-i386-cross", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", REPO: ppa, PACKAGES: "g++-${{variables.gcc_latest}}-multilib"}
+        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", REPO: "llvm-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}} libstdc++-${{variables.clang_latest_libstdcxx}}-dev-i386-cross"}
     pool:
-      vmImage: $(VM_IMAGE)
+      vmImage: ${{variables.linux_latest_vm}}
     steps:
     - template: .ci/azp-linux-test.yml
       parameters:
@@ -162,14 +136,12 @@ stages:
       matrix:
         Clang ${{variables.clang_latest}} x86/64: {
           B2_ARGS: "architecture=x86 address-model=64",
-          TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}",
-          LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        # Clang ${{variables.clang_latest}} x86/32: {
-        #   B2_ARGS: "architecture=x86 address-model=32",
-        #   TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}",
-        #   LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+          TOOLSET: "clang-${{variables.clang_latest}}", REPO: "llvm-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}"}
+        Clang ${{variables.clang_latest}} x86/32: {
+          B2_ARGS: "architecture=x86 address-model=32",
+          TOOLSET: "clang-${{variables.clang_latest}}", REPO: "llvm-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}} libstdc++-${{variables.clang_latest_libstdcxx}}-dev-i386-cross"}
     pool:
-      vmImage: $(VM_IMAGE)
+      vmImage: ${{variables.linux_latest_vm}}
     steps:
     - template: .ci/azp-linux-extra.yml
 
@@ -217,47 +189,32 @@ stages:
   dependsOn: [Core, Extra]
   jobs:
 
-  - job: 'Linux'
+  - job: Linux
     strategy:
       matrix:
-        GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 16: {TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 12: {TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 11: {TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 10: {TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - template: .ci/azp-linux-test.yml
+        GCC 13 - Ubuntu 24.04 : { PACKAGES: build-essential, CONTAINER: ubuntu_2404 }
+        GCC 12 - Debian 12    : { PACKAGES: build-essential, CONTAINER: debian_12 }
+        GCC 11 - Ubuntu 22.04 : { PACKAGES: build-essential, CONTAINER: ubuntu_2204 }
+        GCC 10 - Debian 11    : { PACKAGES: build-essential, CONTAINER: debian_11 }
+        GCC 9  - Ubuntu 20.04 : { PACKAGES: build-essential, CONTAINER: ubuntu_2004 }
+        GCC 8  - Debian 10    : { PACKAGES: build-essential, CONTAINER: debian_10 }
+        GCC 7  - Ubuntu 18.04 : { PACKAGES: build-essential, CONTAINER: ubuntu_1804 }
+        GCC 6  - Debian 9     : { PACKAGES: build-essential, CONTAINER: debian_9 }
+        GCC 5  - Ubuntu 16.04 : { PACKAGES: build-essential, CONTAINER: ubuntu_1604 }
+        GCC 4.9 - Debian 8    : { PACKAGES: build-essential, CONTAINER: debian_8 }
 
-  - job: 'Co_Linux'
-    strategy:
-      matrix:
-        GCC 8: {CXX: g++-8, TOOLSET: gcc-8, PACKAGES: g++-8, CONTAINER: "ubuntu_1804"}
-        GCC 7: {CXX: g++-7, TOOLSET: gcc-7, PACKAGES: g++-7, CONTAINER: "ubuntu_1804"}
-        GCC 6: {CXX: g++-6, TOOLSET: gcc-6, PACKAGES: g++-6, CONTAINER: "ubuntu_1804"}
-        GCC 5: {CXX: g++-5, TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
-        GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
-        GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
-        GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
-        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, LLVM_VER: 6.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, CONTAINER: "ubuntu_1804"}
-        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, CONTAINER: "ubuntu_1804"}
-        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, CONTAINER: "ubuntu_1604"}
-        Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
-        Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
+        Clang 18 - Ubuntu 24.04 : { PACKAGES: clang, CONTAINER: ubuntu_2404 }
+        Clang 14 - Debian 12    : { PACKAGES: clang, CONTAINER: debian_12 }
+        Clang 14 - Ubuntu 22.04 : { PACKAGES: clang, CONTAINER: ubuntu_2204 }
+        Clang 11 - Debian 11    : { PACKAGES: clang, CONTAINER: debian_11 }
+        Clang 10 - Ubuntu 20.04 : { PACKAGES: clang, CONTAINER: ubuntu_2004 }
+        Clang 7  - Debian 10    : { PACKAGES: clang, CONTAINER: debian_10 }
+        Clang 6  - Ubuntu 18.04 : { PACKAGES: clang, CONTAINER: ubuntu_1804 }
+        Clang 3.8 - Debian 9    : { PACKAGES: clang, CONTAINER: debian_9 }
+        Clang 3.8 - Ubuntu 16.04: { PACKAGES: clang, CONTAINER: ubuntu_1604 }
+        Clang 3.5 - Debian 8    : { PACKAGES: clang, CONTAINER: debian_8 }
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: ubuntu-latest
     container: $[ variables['CONTAINER'] ]
     steps:
     - template: .ci/azp-linux-prep-container.yml
@@ -298,10 +255,10 @@ stages:
     displayName: 'Dev Linux'
     strategy:
       matrix:
-        Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Develop .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Master .. GCC    : { BOOST_BRANCH: master,  TOOLSET: gcc,   PACKAGES: g++,   VM_IMAGE: ubuntu-latest }
+        Master .. Clang  : { BOOST_BRANCH: master,  TOOLSET: clang, PACKAGES: clang, VM_IMAGE: ubuntu-latest }
+        Develop .. GCC   : { BOOST_BRANCH: develop, TOOLSET: gcc,   PACKAGES: g++,   VM_IMAGE: ubuntu-latest }
+        Develop .. Clang : { BOOST_BRANCH: develop, TOOLSET: clang, PACKAGES: clang, VM_IMAGE: ubuntu-latest }
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -313,7 +270,7 @@ stages:
     - bash: |
         set -e
         cd src/engine
-        ./build.sh ${TOOLSET} --cxx=${CXX}
+        ./build.sh ${TOOLSET}
         ./b2 -v
       displayName: Build
     - bash: |
@@ -322,8 +279,6 @@ stages:
         git clone --recursive https://github.com/boostorg/boost.git
         cd boost
         git checkout ${BOOST_BRANCH}
-        CXX_PATH=`which ${CXX}`
-        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
