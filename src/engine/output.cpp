@@ -172,13 +172,17 @@ void errno_printf(char const * const f, ...)
 
 OBJECT * outf_int( int const value )
 {
-    return b2::value::as_string( value );
+    char buffer[ 50 ];
+    sprintf( buffer, "%i", value );
+    return object_new( buffer );
 }
 
 
 OBJECT * outf_double( double const value )
 {
-    return b2::value::as_string( value );
+    char buffer[ 50 ];
+    sprintf( buffer, "%f", value );
+    return object_new( buffer );
 }
 
 

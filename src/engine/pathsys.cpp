@@ -262,11 +262,13 @@ string const * path_tmpdir()
 
 OBJECT * path_tmpnam( void )
 {
+    char name_buffer[ 64 ];
     unsigned long const pid = path_get_process_id_();
-    static unsigned long t = 0;
+    static unsigned long t;
     if ( !t ) t = time( 0 ) & 0xffff;
     t += 1;
-    return b2::value::format( "jam%lx%lx.000", pid, t );
+    sprintf( name_buffer, "jam%lx%lx.000", pid, t );
+    return object_new( name_buffer );
 }
 
 

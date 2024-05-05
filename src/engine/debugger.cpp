@@ -1108,6 +1108,7 @@ static void debug_parent_copy_breakpoints( void )
 static void debug_start_child( int argc, const char * * argv )
 {
 #if NT
+    char buf[ 80 ];
     HANDLE pipe1[ 2 ];
     HANDLE pipe2[ 2 ];
     string self[ 1 ];
@@ -1142,10 +1143,12 @@ static void debug_start_child( int argc, const char * * argv )
     string_copy( command_line, "b2 " );
     /* Pass the handles as the first and second arguments. */
     string_append( command_line, debugger_opt );
-    string_append( command_line, b2::value::format( "%p", pipe1[ 0 ] )->str() );
+    sprintf( buf, "%p", pipe1[ 0 ] );
+    string_append( command_line, buf );
     string_push_back( command_line, ' ' );
     string_append( command_line, debugger_opt );
-    string_append( command_line, b2::value::format( "%p", pipe2[ 1 ] )->str() );
+    sprintf( buf, "%p", pipe2[ 1 ] );
+    string_append( command_line, buf );
     /* Pass the rest of the command line. */
 	{
         int i;
@@ -1492,6 +1495,7 @@ static void debug_parent_delete( int argc, const char * * argv )
 
 static void debug_parent_clear( int argc, const char * * argv )
 {
+    char buf[ 16 ];
     const char * new_args[ 2 ];
     int id;
     if ( argc < 2 )
@@ -1516,9 +1520,9 @@ static void debug_parent_clear( int argc, const char * * argv )
         printf( "Deleted breakpoint %d\n", id );
     }
 
-    auto id_s = std::to_string(id);
+    sprintf( buf, "%d", id );
     new_args[ 0 ] = "delete";
-    new_args[ 1 ] = id_s.c_str();
+    new_args[ 1 ] = buf;
     debug_parent_delete( 2, new_args );
 }
 
@@ -1573,8 +1577,9 @@ static void debug_parent_backtrace( int argc, const char * * argv )
     for ( i = 0; i < depth; ++i )
     {
         FRAME_INFO frame;
-        auto i_s = std::to_string(i);
-        new_args[ 2 ] = i_s.c_str();
+        char buf[ 16 ];
+        sprintf( buf, "%d", i );
+        new_args[ 2 ] = buf;
         debug_parent_forward_nowait( 3, new_args, 0, 0 );
         debug_frame_read( command_child, &frame );
         printf( "#%d  in ", i );
@@ -1932,9 +1937,10 @@ static void debug_mi_break_insert( int argc, const char * * argv )
 
     if ( disabled )
     {
-        auto num_breakpoints_s = std::to_string(num_breakpoints);
+        char buf[ 80 ];
+        sprintf( buf, "%d", num_breakpoints );
         inner_argv[ 0 ] = "disable";
-        inner_argv[ 1 ] = num_breakpoints_s.c_str();
+        inner_argv[ 1 ] = buf;
         debug_child_disable( 2, inner_argv );
         debug_parent_forward_nowait( 2, inner_argv, 1, 0 );
     }

@@ -43,7 +43,6 @@ freebsd_task:
     "CXX_PATH=`which ${CXX}`",
     "cd test",
     "echo \"using ${TEST_TOOLSET} : : ${CXX_PATH} ;\" > ${HOME}/user-config.jam",
-    "python3 grep.py ${TEST_TOOLSET}",
     "python3 test_all.py ${TEST_TOOLSET}",
     "cd ..",
   ]

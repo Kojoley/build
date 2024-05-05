@@ -20,9 +20,6 @@
 #include "pathsys.h"
 #include "jam_strings.h"
 
-#include <algorithm>
-#include <cctype>
-
 
 #ifdef OS_VMS
 
@@ -313,12 +310,9 @@ static unsigned int set_archive_member( struct dsc$descriptor_s *module,
         file_info_t * member = 0;
 
         /* Construct member's filename as lowercase "module.obj" */
-        std::string name = filename;
-        name += ".obj";
-        std::transform(name.begin(), name.end(), name.begin(),
-            [](unsigned char c) { return std::tolower(c); });
-        archive->members = filelist_push_back( archive->members,
-            b2::value::make( name ) );
+        sprintf( buf, "%s.obj", filename );
+        downcase_inplace( buf );
+        archive->members = filelist_push_back( archive->members, object_new( buf ) );
 
         member = filelist_back( archive->members );
         member->is_file = 1;
@@ -356,6 +350,7 @@ void file_archscan( char const * arch, scanback func, void * closure )
     {
         FILELISTITER iter = filelist_begin( archive->members );
         FILELISTITER const end = filelist_end( archive->members );
+        char buf[ MAXJPATH ];
 
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
@@ -364,10 +359,11 @@ void file_archscan( char const * arch, scanback func, void * closure )
 
             /* Construct member path: 'archive-path(member-name)'
              */
+            sprintf( buf, "%s(%s)",
+                object_str( archive->file->name ),
+                object_str( member_file->name ) );
             {
-                OBJECT * member = b2::value::format( "%s(%s)",
-                    object_str( archive->file->name ),
-                    object_str( member_file->name ) );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, 1 /* time valid */, &member_file->time );
                 object_free( member );
             }

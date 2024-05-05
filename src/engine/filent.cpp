@@ -367,6 +367,7 @@ void file_archscan( char const * arch, scanback func, void * closure )
     {
         FILELISTITER iter = filelist_begin( archive->members );
         FILELISTITER const end = filelist_end( archive->members );
+        char buf[ MAXJPATH ];
 
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
@@ -374,10 +375,11 @@ void file_archscan( char const * arch, scanback func, void * closure )
 
             /* Construct member path: 'archive-path(member-name)'
              */
+            sprintf( buf, "%s(%s)",
+                object_str( archive->file->name ),
+                object_str( member_file->name ) );
             {
-                OBJECT * member = b2::value::format( "%s(%s)",
-                    object_str( archive->file->name ),
-                    object_str( member_file->name ) );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, 1 /* time valid */, &member_file->time );
                 object_free( member );
             }
@@ -484,9 +486,9 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
                 name = c + 1;
         }
 
-        auto member_name = b2::value::format( "%.*s", int(endname - name), name );
+        sprintf( buf, "%.*s", int(endname - name), name );
 
-        if ( member_name->as_string().size > 0 )
+        if ( strcmp( buf, "") != 0 )
         {
             file_info_t * member = 0;
 
@@ -495,7 +497,7 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
              * Here we reverse the stored sequence by pushing members to front of
              * member file list to get the intended members order.
              */
-            archive->members = filelist_push_front( archive->members, member_name );
+            archive->members = filelist_push_front( archive->members, object_new( buf ) );
             member = filelist_front( archive->members );
             member->is_file = 1;
             member->is_dir = 0;

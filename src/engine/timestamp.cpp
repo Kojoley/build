@@ -7,7 +7,6 @@
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2020 Nikita Kniazev.
- * Copyright 2023 René Ferdinand Rivera Morell.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE.txt or
  * https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -25,15 +24,14 @@
  */
 
 #include "jam.h"
+#include "timestamp.h"
 
 #include "filesys.h"
 #include "hash.h"
-#include "jam_strings.h"
 #include "object.h"
-#include "output.h"
 #include "pathsys.h"
-#include "timestamp.h"
-#include "types.h"
+#include "jam_strings.h"
+#include "output.h"
 
 
 /*
@@ -184,14 +182,12 @@ void timestamp_max( timestamp * const max, timestamp const * const lhs,
 static char const * timestamp_formatstr( timestamp const * const time,
     char const * const format )
 {
-    // gmtime is not thread safe. And there's no alternative in C++11.
-    // So we make this whole thing exclusive to prevent errors.
-    static b2::mutex_t m;
-    b2::scope_lock_t l(m);
     static char result1[ 500 ];
+    static char result2[ 500 ];
     strftime( result1, sizeof( result1 ) / sizeof( *result1 ), format, gmtime(
         &time->secs ) );
-    return b2::value::format( result1, time->nsecs )->str();
+    sprintf( result2, result1, time->nsecs );
+    return result2;
 }
 
 

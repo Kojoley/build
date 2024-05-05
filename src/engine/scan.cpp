@@ -47,7 +47,7 @@ static int scanmode = SCAN_NORMAL;
 static int anyerrors = 0;
 
 
-static std::string symdump( YYSTYPE * );
+static char * symdump( YYSTYPE * );
 
 #define BIGGEST_TOKEN 10240  /* no single token can be larger */
 
@@ -77,7 +77,7 @@ void yyerror( char const * s )
      * hold the information about where reading it broke.
      */
     out_printf( "%s:%d: %s at %s\n", object_str( yylval.file ), yylval.line, s,
-            symdump( &yylval ).c_str() );
+            symdump( &yylval ) );
     ++anyerrors;
 }
 
@@ -239,7 +239,7 @@ static int use_new_scanner = 0;
 void do_token_warning()
 {
     out_printf( "%s:%d: %s %s\n", object_str( yylval.file ), yylval.line, "Unescaped special character in",
-            symdump( &yylval ).c_str() );
+            symdump( &yylval ) );
 }
 
 #define token_warning() has_token_warning = 1
@@ -764,7 +764,7 @@ int yylex()
     }
 
     if ( DEBUG_SCAN )
-        out_printf( "scan %s\n", symdump( &yylval ).c_str() );
+        out_printf( "scan %s\n", symdump( &yylval ) );
 
     return yylval.type;
 
@@ -777,17 +777,18 @@ eof:
 }
 
 
-static std::string symdump( YYSTYPE * s )
+static char * symdump( YYSTYPE * s )
 {
+    static char buf[ BIGGEST_TOKEN + 20 ];
     switch ( s->type )
     {
-        case EOF   : return "EOF"; break;
-        case 0     : return std::string("unknown symbol ") + s->string->str(); break;
-        case ARG   : return std::string("argument ") + s->string->str(); break;
-        case STRING: return std::string("string \"") + s->string->str() + "\""; break;
-        default    : return std::string("keyword ") + s->keyword; break;
+        case EOF   : sprintf( buf, "EOF"                                        ); break;
+        case 0     : sprintf( buf, "unknown symbol %s", object_str( s->string ) ); break;
+        case ARG   : sprintf( buf, "argument %s"      , object_str( s->string ) ); break;
+        case STRING: sprintf( buf, "string \"%s\""    , object_str( s->string ) ); break;
+        default    : sprintf( buf, "keyword %s"       , s->keyword              ); break;
     }
-    return "";
+    return buf;
 }
 
 
