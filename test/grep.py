@@ -12,13 +12,17 @@ t = BoostBuild.Tester(pass_toolset=False)
 t.write("Jamroot", """
 import regex ;
 local r ;
+ECHO 1 ;
 local a = [ regex.grep . : *.*pp : "#(include) <([^>]+)>" ] ;
+ECHO 2 ;
 while $(a)
 {
     r += "$(a[1]:D=) $(a[2])" ;
     a = $(a[3-]) ;
 }
+ECHO 3 ;
 local b = [ regex.grep . : *.*pp : "#(include) <([^>]+)>" : 1 2 ] ;
+ECHO 4 ;
 while $(b)
 {
     r += "$(b[1]:D=) $(b[2]) $(b[3])" ;
