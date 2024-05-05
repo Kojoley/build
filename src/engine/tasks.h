@@ -1,5 +1,5 @@
 /*
-Copyright 2022-2023 René Ferdinand Rivera Morell
+Copyright 2022 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -14,67 +14,24 @@ Distributed under the Boost Software License, Version 1.0.
 #include <functional>
 #include <memory>
 
-/*
-= Tasks
+namespace b2 {
 
-Utility classes for parallel invocation of "tasks" (i.e. functions).
-*/
-
-namespace b2 { namespace task {
-
-class executor;
-
-/*
-== `b2::task::group`
-
-A task group is a collection of tasks that will execute within a parallelism
-limit of their own and can be waited on collectively to complete.
-*/
-class group
+class task_group
 {
 	public:
-	group(executor & exec, unsigned parallelism = 0);
-	~group();
-
-	// Add a task function to execute async. The functions are executed in no
-	// particular order.
-	void queue(std::function<void()> && f);
-
-	// Wait for all the task functions in the group to complete.
+	task_group();
+	void queue(const std::function<void()> & f);
 	void wait();
-
-	private:
-	struct implementation;
-	std::shared_ptr<implementation> i;
-
-	friend class executor;
 };
 
-/*
-== `b2::task::executor`
-
-Global task execution queue that has a global parallelism limit. By default the
-parallelism limit matches the `b2::system_info::cpu_thread_count` value.
-*/
-class executor
+class task_executor
 {
 	public:
-	executor(unsigned parallelism = 0);
-	~executor();
-
-	// The global executor instance.
-	static executor & get();
-
-	// Create a task group.
-	std::shared_ptr<group> make(unsigned parallelism = 0);
-
-	private:
-	struct implementation;
-	std::shared_ptr<implementation> i;
-
-	friend class group;
+	task_executor(unsigned parallelism = 0);
+	std::unique_ptr<task_group> make(unsigned parallelism = 0);
+	static task_executor & get();
 };
 
-}} // namespace b2::task
+} // namespace b2
 
 #endif
