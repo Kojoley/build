@@ -56,7 +56,7 @@ def print_annotation(name, value, xml):
         print("}}}")
     else:
         print(name + " {{{")
-        print(str(value).encode('utf8'))
+        print(value)
         print("}}}")
 
 
@@ -469,7 +469,7 @@ class Tester(TestCmd.TestCmd):
     def run_build_system(self, extra_args=None, subdir="", stdout=None,
         stderr="", status=0, match=None, match_filter=None, pass_toolset=None,
         use_test_config=None, ignore_toolset_requirements=None,
-        expected_duration=None, **kw):
+        expected_duration=None, timeout=660, **kw):
 
         assert extra_args.__class__ is not str
 
@@ -516,10 +516,15 @@ class Tester(TestCmd.TestCmd):
             if "--stacktrace" in sys.argv:
                 kw["program"].append("--stacktrace")
             kw["chdir"] = subdir
+            kw["timeout"] = timeout
             self.last_program_invocation = kw["program"]
             build_time_start = time.time()
             TestCmd.TestCmd.run(self, **kw)
             build_time_finish = time.time()
+        except subprocess.TimeoutExpired as e:
+            annotation("STDOUT", e.stdout)
+            annotation("STDERR", e.stderr)
+            raise
         except:
             self.dump_stdio()
             raise

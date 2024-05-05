@@ -62,9 +62,8 @@ def iterfutures(futures, cancel_handler):
 
 
 def run_test(test):
-    import os
     import faulthandler
-    faulthandler.dump_traceback_later(800, exit=True)
+    faulthandler.dump_traceback_later(960, exit=True)
     ts = time.perf_counter()
     exc = None
     try:

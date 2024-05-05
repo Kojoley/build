@@ -392,7 +392,7 @@ class TestCmd:
         return open(file, mode).read()
 
     def run(self, program=None, arguments=None, chdir=None, stdin=None,
-        universal_newlines=True):
+            universal_newlines=True, timeout=None):
         """
           Runs a test of the program or script for the test environment.
         Standard output and error output are saved for future retrieval via the
@@ -422,14 +422,15 @@ class TestCmd:
             cmd += arguments.split(" ")
         if self.verbose:
             sys.stderr.write("run(" + " ".join(cmd) + ")\n")
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
-            universal_newlines=universal_newlines)
 
         if stdin:
             if type(stdin) is list:
                 stdin = "".join(stdin)
-        out, err = p.communicate(stdin)
+
+        p = subprocess.run(cmd, input=stdin,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                           cwd=chdir, universal_newlines=universal_newlines, timeout=timeout)
+
         if not type(out) is str:
             out = out.decode()
         if not type(err) is str:
