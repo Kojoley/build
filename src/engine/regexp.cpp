@@ -48,7 +48,6 @@
 #include "regexp.h"
 #include "jam.h"
 #include "output.h"
-#include "strview.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -74,7 +73,7 @@ void regerror(char const * s);
  * The "internal use only" fields in regexp.h are present to pass info from
  * compile to execute that permits the execute phase to run lots faster on
  * simple cases. They are:
- *
+ :
  *  regstart char that must begin a match; '\0' if none obvious.
  *  reganch  is the match anchored (at beginning-of-line only)?
  *  regmust  string (pointer into program) that match must include, or NULL.
@@ -187,6 +186,10 @@ return (NULL); \
 #define SPSTART 04 /* Starts with * or +. */
 #define WORST 0 /* Worst case. */
 
+#ifndef STATIC
+#define STATIC static
+#endif
+
 namespace {
 char regdummy = 0;
 /*
@@ -212,7 +215,6 @@ inline C * regnext(C * p)
 // The compiled regex program to match with.
 struct regex_prog
 {
-	std::string regexpr; /* The not-compiled regex.  */
 	char regstart = 0; /* Internal use only. */
 	char reganch = 0; /* Internal use only. */
 	const char * regmust = nullptr; /* Internal use only. */
@@ -279,10 +281,8 @@ struct compiler
 
 		/* Allocate space. */
 		r = (regex_prog *)BJAM_MALLOC(sizeof(regex_prog) + regsize);
-		if (r == NULL) FAIL("out of space");
-		b2::jam::ctor_ptr<regex_prog>(r);
-		r->regexpr = exp;
 		r->progsize = regsize;
+		if (r == NULL) FAIL("out of space");
 
 		/* Second pass: emit code. */
 		regparse = (char *)exp;
@@ -814,72 +814,114 @@ struct executor
 	/*
 	 * Global work variables for regexec().
 	 */
-	string_view reg_in; /* String-input. */
-	const char * reg_bol; /* Beginning of input, for ^ check. */
+	const char * reginput; /* String-input pointer. */
+	const char * regbol; /* Beginning of input, for ^ check. */
+	const char ** regstartp; /* Pointer to startp array. */
+	const char ** regendp; /* Ditto for endp. */
+
+#ifdef DEBUG
+	int32_t regnarrate = 0;
+	void regdump();
+	STATIC char * regprop();
+#endif
 
 	/*
 	 - regexec - match a regexp against a string
 	 */
-	bool regexec(
-		const regex_prog & prog, regex_expr & expr, const string_view & string)
+	int32_t regexec(
+		const regex_prog * prog, regex_expr * expr, const char * string)
 	{
-		string_view s;
+		char * s;
+
+		/* Be paranoid... */
+		if (prog == NULL)
+		{
+			regerror("NULL parameter");
+			return (0);
+		}
+		if (string == NULL)
+		{
+			regerror("NULL string");
+			return (0);
+		}
+
 		/* Check validity of program. */
-		if (UCHARAT(prog.program) != MAGIC)
+		if (UCHARAT(prog->program) != MAGIC)
 		{
 			regerror("corrupted program");
-			return false;
+			return (0);
 		}
 
 		/* If there is a "must appear" string, look for it. */
-		if (prog.regmust != NULL
-			&& string.find(prog.regmust, 0, prog.regmlen) == string_view::npos)
-			return false; /* Not present. */
+		if (prog->regmust != NULL)
+		{
+			s = (char *)string;
+			while ((s = strchr(s, prog->regmust[0])) != NULL)
+			{
+				if (!strncmp(s, prog->regmust, prog->regmlen))
+					break; /* Found it. */
+				++s;
+			}
+			if (s == NULL) /* Not present. */
+				return 0;
+		}
 
 		/* Mark beginning of line for ^ . */
-		reg_bol = string.begin();
+		regbol = (char *)string;
 
 		/* Simplest case:  anchored match need be tried only once. */
-		if (prog.reganch) return regtry(prog, expr, string);
+		if (prog->reganch) return regtry(prog, expr, string);
 
 		/* Messy cases:  unanchored match. */
-		s = string;
-		if (prog.regstart != '\0') /* We know what char it must start with. */
-			for (auto j = s.find(prog.regstart); j != string_view::npos;
-				 j = s.find(prog.regstart))
+		s = (char *)string;
+		if (prog->regstart != '\0') /* We know what char it must start with. */
+			while ((s = strchr(s, prog->regstart)) != NULL)
 			{
-				s = s.substr(j);
-				if (regtry(prog, expr, s)) return true;
-				s = s.substr(1);
+				if (regtry(prog, expr, s)) return (1);
+				s++;
 			}
 		else
 			/* We do not -- general case. */
 			do
 			{
-				if (regtry(prog, expr, s)) return true;
+				if (regtry(prog, expr, s)) return (1);
 			}
-			while (!(s = s.substr(1)).empty());
+			while (*s++ != '\0');
 
 		/* Failure. */
-		return false;
+		return 0;
 	}
 
 	/*
 	 * regtry() - try match at specific point.
-	 * success == true
 	 */
 
-	inline bool regtry(
-		const regex_prog & prog, regex_expr & expr, const string_view & string)
+	int32_t /* 0 failure, 1 success */
+		regtry(const regex_prog * prog, regex_expr * expr, const char * string)
 	{
-		reg_in = string;
-		expr = regex_expr {};
-		if (regmatch(prog.program + 1, expr))
+		int32_t i;
+		const char ** sp;
+		const char ** ep;
+
+		reginput = string;
+		regstartp = expr->startp;
+		regendp = expr->endp;
+
+		sp = expr->startp;
+		ep = expr->endp;
+		for (i = NSUBEXP; i > 0; --i)
 		{
-			expr.sub[0] = string_view(string.begin(), reg_in.begin());
-			return true;
+			*sp++ = NULL;
+			*ep++ = NULL;
 		}
-		return false;
+		if (regmatch(prog->program + 1))
+		{
+			expr->startp[0] = string;
+			expr->endp[0] = reginput;
+			return 1;
+		}
+		else
+			return 0;
 	}
 
 	/*
@@ -892,45 +934,47 @@ struct executor
 	 * whether the rest of the match failed) by a loop instead of by recursion.
 	 */
 
-	bool regmatch(const char * prog, regex_expr & expr)
+	int32_t /* 0 failure, 1 success */
+		regmatch(const char * prog)
 	{
 		const char * scan; /* Current node. */
 		const char * next; /* Next node. */
 
 		scan = prog;
+#ifdef DEBUG
+		if (scan != NULL && regnarrate) err_printf("%s(\n", regprop(scan));
+#endif
 		while (scan != NULL)
 		{
+#ifdef DEBUG
+			if (regnarrate) err_printf("%s...\n", regprop(scan));
+#endif
 			next = regnext(scan);
 
 			switch (OP(scan))
 			{
 				case BOL:
-					if (reg_in.begin() != reg_bol) return false;
+					if (reginput != regbol) return (0);
 					break;
 				case EOL:
-					if (!reg_in.empty()) return false;
+					if (*reginput != '\0') return (0);
 					break;
 				case WORDA:
 					/* Must be looking at a letter, digit, or _ */
-					if (!reg_in.empty() && (!isalnum(reg_in[0]))
-						&& reg_in[0] != '_')
-						return false;
+					if ((!isalnum(*reginput)) && *reginput != '_') return (0);
 					/* Prev must be BOL or nonword */
-					if (reg_in.begin() > reg_bol
-						&& (isalnum(reg_in.begin()[-1])
-							|| reg_in.begin()[-1] == '_'))
-						return false;
+					if (reginput > regbol
+						&& (isalnum(reginput[-1]) || reginput[-1] == '_'))
+						return (0);
 					break;
 				case WORDZ:
 					/* Must be looking at non letter, digit, or _ */
-					if (reg_in.empty() || isalnum(reg_in[0])
-						|| reg_in[0] == '_')
-						return false;
+					if (isalnum(*reginput) || *reginput == '_') return (0);
 					/* We don't care what the previous char was */
 					break;
 				case ANY:
-					if (reg_in.empty()) return false;
-					reg_in = reg_in.substr(1);
+					if (*reginput == '\0') return (0);
+					reginput++;
 					break;
 				case EXACTLY:
 				{
@@ -939,24 +983,24 @@ struct executor
 
 					opnd = OPERAND(scan);
 					/* Inline the first character, for speed. */
-					if (reg_in.empty() || *opnd != reg_in[0]) return false;
+					if (*opnd != *reginput) return (0);
 					len = strlen(opnd);
-					if (len > 1 && reg_in.compare(0, len, opnd) != 0)
-						return false;
-					reg_in = reg_in.substr(len);
+					if (len > 1 && strncmp(opnd, reginput, len) != 0)
+						return (0);
+					reginput += len;
 				}
 				break;
 				case ANYOF:
-					if (reg_in.empty()
-						|| strchr(OPERAND(scan), reg_in[0]) == NULL)
-						return false;
-					reg_in = reg_in.substr(1);
+					if (*reginput == '\0'
+						|| strchr(OPERAND(scan), *reginput) == NULL)
+						return (0);
+					reginput++;
 					break;
 				case ANYBUT:
-					if (reg_in.empty()
-						|| strchr(OPERAND(scan), reg_in[0]) != NULL)
-						return false;
-					reg_in = reg_in.substr(1);
+					if (*reginput == '\0'
+						|| strchr(OPERAND(scan), *reginput) != NULL)
+						return (0);
+					reginput++;
 					break;
 				case NOTHING: break;
 				case BACK: break;
@@ -971,23 +1015,23 @@ struct executor
 				case OPEN + 9:
 				{
 					int32_t no;
+					const char * save;
 
 					no = OP(scan) - OPEN;
-					auto save = reg_in;
+					save = reginput;
 
-					if (regmatch(next, expr))
+					if (regmatch(next))
 					{
 						/*
 						 * Don't set startp if some later
 						 * invocation of the same parentheses
 						 * already has.
 						 */
-						if (expr.sub[no].begin() == nullptr)
-							expr.sub[no] = string_view(save.begin(), 0);
-						return true;
+						if (regstartp[no] == NULL) regstartp[no] = save;
+						return (1);
 					}
 					else
-						return false;
+						return (0);
 				}
 				break;
 				case CLOSE + 1:
@@ -1001,41 +1045,42 @@ struct executor
 				case CLOSE + 9:
 				{
 					int32_t no;
+					const char * save;
 
 					no = OP(scan) - CLOSE;
-					auto save = reg_in;
+					save = reginput;
 
-					if (regmatch(next, expr))
+					if (regmatch(next))
 					{
 						/*
 						 * Don't set endp if some later
 						 * invocation of the same parentheses
 						 * already has.
 						 */
-						if (expr.sub[no].begin() && expr.sub[no].empty())
-							expr.sub[no] = string_view(
-								expr.sub[no].begin(), save.begin());
-						return true;
+						if (regendp[no] == NULL) regendp[no] = save;
+						return (1);
 					}
 					else
-						return false;
+						return (0);
 				}
 				break;
 				case BRANCH:
 				{
+					const char * save;
+
 					if (OP(next) != BRANCH) /* No choice. */
 						next = OPERAND(scan); /* Avoid recursion. */
 					else
 					{
 						do
 						{
-							auto save = reg_in;
-							if (regmatch(OPERAND(scan), expr)) return true;
-							reg_in = save;
+							save = reginput;
+							if (regmatch(OPERAND(scan))) return (1);
+							reginput = save;
 							scan = regnext(scan);
 						}
 						while (scan != NULL && OP(scan) == BRANCH);
-						return false;
+						return (0);
 						/* NOTREACHED */
 					}
 				}
@@ -1045,6 +1090,7 @@ struct executor
 				{
 					char nextch;
 					int32_t no;
+					const char * save;
 					int32_t min;
 
 					/*
@@ -1054,26 +1100,26 @@ struct executor
 					nextch = '\0';
 					if (OP(next) == EXACTLY) nextch = *OPERAND(next);
 					min = (OP(scan) == STAR) ? 0 : 1;
-					auto save = reg_in;
+					save = reginput;
 					no = regrepeat(OPERAND(scan));
 					while (no >= min)
 					{
 						/* If it could work, try it. */
-						if (nextch == '\0' || reg_in[0] == nextch)
-							if (regmatch(next, expr)) return true;
+						if (nextch == '\0' || *reginput == nextch)
+							if (regmatch(next)) return (1);
 						/* Couldn't or didn't -- back up. */
 						no--;
-						reg_in = save.substr(no);
+						reginput = save + no;
 					}
-					return false;
+					return (0);
 				}
 				break;
 				case END:
-					return true; /* Success! */
+					return (1); /* Success! */
 					break;
 				default:
 					regerror("memory corruption");
-					return false;
+					return (0);
 					break;
 			}
 
@@ -1085,7 +1131,7 @@ struct executor
 		 * the terminating point.
 		 */
 		regerror("corrupted pointers");
-		return false;
+		return (0);
 	}
 
 	/*
@@ -1094,35 +1140,36 @@ struct executor
 	int32_t regrepeat(const char * p)
 	{
 		int32_t count = 0;
+		const char * scan;
 		const char * opnd;
 
-		auto scan = reg_in;
+		scan = reginput;
 		opnd = OPERAND(p);
 		switch (OP(p))
 		{
 			case ANY:
-				count = int32_t(scan.length());
-				scan = scan.substr(count);
+				count = int32_t(strlen(scan));
+				scan += count;
 				break;
 			case EXACTLY:
-				while (*opnd == scan[0])
+				while (*opnd == *scan)
 				{
 					count++;
-					scan = scan.substr(1);
+					scan++;
 				}
 				break;
 			case ANYOF:
-				while (!scan.empty() && strchr(opnd, scan[0]) != NULL)
+				while (*scan != '\0' && strchr(opnd, *scan) != NULL)
 				{
 					count++;
-					scan = scan.substr(1);
+					scan++;
 				}
 				break;
 			case ANYBUT:
-				while (!scan.empty() && strchr(opnd, scan[0]) == NULL)
+				while (*scan != '\0' && strchr(opnd, *scan) == NULL)
 				{
 					count++;
-					scan = scan.substr(1);
+					scan++;
 				}
 				break;
 			default: /* Oh dear.  Called inappropriately. */
@@ -1130,20 +1177,151 @@ struct executor
 				count = 0; /* Best compromise. */
 				break;
 		}
-		reg_in = scan;
+		reginput = scan;
 
 		return (count);
 	}
 
 }; // struct executor
 
-bool regex_exec(
-	const regex_prog & prog, regex_expr & expr, const string_view & text)
+int32_t regex_exec(const regex_prog & prog,
+	regex_expr & expr,
+	const char * start,
+	const char * end)
 {
 	executor e;
-	auto result = e.regexec(prog, expr, text);
-	return result;
+	return e.regexec(&prog, &expr, start);
 }
+
+#ifdef DEBUG
+
+STATIC char * regprop();
+
+/*
+ - regdump - dump a regexp onto stdout in vaguely comprehensible form
+ */
+void regdump(regexp * r)
+{
+	char * s;
+	char op = EXACTLY; /* Arbitrary non-END op. */
+	char * next;
+
+	s = r->program + 1;
+	while (op != END)
+	{ /* While that wasn't END last time... */
+		op = OP(s);
+		out_printf("%2d%s", s - r->program, regprop(s)); /* Where, what. */
+		next = regnext(s);
+		if (next == NULL) /* Next ptr. */
+			out_printf("(0)");
+		else
+			out_printf("(%d)", (s - r->program) + (next - s));
+		s += 3;
+		if (op == ANYOF || op == ANYBUT || op == EXACTLY)
+		{
+			/* Literal string, where present. */
+			while (*s != '\0')
+			{
+				out_putc(*s);
+				s++;
+			}
+			s++;
+		}
+		out_putc('\n');
+	}
+
+	/* Header fields of interest. */
+	if (r->regstart != '\0') out_printf("start `%c' ", r->regstart);
+	if (r->reganch) out_printf("anchored ");
+	if (r->regmust != NULL) out_printf("must have \"%s\"", r->regmust);
+	out_printf("\n");
+}
+
+/*
+ - regprop - printable representation of opcode
+ */
+static char * regprop(char * op)
+{
+	char * p;
+	static char buf[50];
+
+	(void)strcpy(buf, ":");
+
+	switch (OP(op))
+	{
+		case BOL: p = "BOL"; break;
+		case EOL: p = "EOL"; break;
+		case ANY: p = "ANY"; break;
+		case ANYOF: p = "ANYOF"; break;
+		case ANYBUT: p = "ANYBUT"; break;
+		case BRANCH: p = "BRANCH"; break;
+		case EXACTLY: p = "EXACTLY"; break;
+		case NOTHING: p = "NOTHING"; break;
+		case BACK: p = "BACK"; break;
+		case END: p = "END"; break;
+		case OPEN + 1:
+		case OPEN + 2:
+		case OPEN + 3:
+		case OPEN + 4:
+		case OPEN + 5:
+		case OPEN + 6:
+		case OPEN + 7:
+		case OPEN + 8:
+		case OPEN + 9:
+			sprintf(buf + strlen(buf), "OPEN%d", OP(op) - OPEN);
+			p = NULL;
+			break;
+		case CLOSE + 1:
+		case CLOSE + 2:
+		case CLOSE + 3:
+		case CLOSE + 4:
+		case CLOSE + 5:
+		case CLOSE + 6:
+		case CLOSE + 7:
+		case CLOSE + 8:
+		case CLOSE + 9:
+			sprintf(buf + strlen(buf), "CLOSE%d", OP(op) - CLOSE);
+			p = NULL;
+			break;
+		case STAR: p = "STAR"; break;
+		case PLUS: p = "PLUS"; break;
+		case WORDA: p = "WORDA"; break;
+		case WORDZ: p = "WORDZ"; break;
+		default: regerror("corrupted opcode"); break;
+	}
+	if (p != NULL) (void)strcat(buf, p);
+	return (buf);
+}
+#endif
+
+/*
+ * The following is provided for those people who do not have strcspn() in
+ * their C libraries.  They should get off their butts and do something
+ * about it; at least one public-domain implementation of those (highly
+ * useful) string routines has been published on Usenet.
+ */
+#ifdef STRCSPN
+/*
+ * strcspn - find length of initial segment of s1 consisting entirely
+ * of characters not from s2
+ */
+
+static int32_t strcspn(char * s1, char * s2)
+{
+	char * scan1;
+	char * scan2;
+	int32_t count;
+
+	count = 0;
+	for (scan1 = s1; *scan1 != '\0'; scan1++)
+	{
+		for (scan2 = s2; *scan2 != '\0';) /* ++ moved down. */
+			if (*scan1 == *scan2++) return (count);
+		count++;
+	}
+	return (count);
+}
+#endif
 
 void regerror(char const * s) { out_printf("re error %s\n", s); }
 
@@ -1162,9 +1340,10 @@ program::program(const char * pattern) { reset(pattern); }
 void program::reset(const char * pattern) { compiled = &compile(pattern); }
 
 program::result_iterator::result_iterator(
-	const regex_prog & c, const string_view & s)
+	const regex_prog & c, const char * b, const char * e)
 	: compiled(&c)
-	, rest(s)
+	, match { b, 0 }
+	, rest { b, std::size_t(e - b) }
 {
 	advance();
 }
@@ -1172,11 +1351,20 @@ program::result_iterator::result_iterator(
 void program::result_iterator::advance()
 {
 	// We start searching for a match at the end of the previous match.
-	if (regex_exec(*compiled, expressions, rest))
+	if (regex_exec(*compiled, expressions, rest.begin(), rest.end()) == 0)
+	{
+		// No next match, reset to end/nothing.
+		match.str = nullptr;
+		match.size = 0;
+	}
+	else
 	{
 		// A match means the subexpressions are filled in and the first entry
-		// is the full match. Advance `rest` to follow the match.
-		rest = string_view(expressions.sub[0].end(), rest.end());
+		// is the full match.
+		match.str = expressions.startp[0];
+		match.size = expressions.endp[0] - expressions.startp[0];
+		rest.str = expressions.endp[0];
+		rest.size = rest.end() - rest.begin();
 	}
 }
 
