@@ -18,7 +18,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include <numeric>
 #include <string>
 #include <vector>
-#include <cctype>
 
 using namespace b2;
 using namespace b2::regex;
