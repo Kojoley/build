@@ -286,11 +286,9 @@ struct _stack
         data = end;
     }
 
-    #if defined(__clang__) && defined(__has_feature)
-    #if __has_feature(address_sanitizer)
+    #ifdef __clang__
     // This function calls not properly type-erased callbacks
     __attribute__((no_sanitize("undefined")))
-    #endif
     #endif
     void done()
     {
