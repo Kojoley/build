@@ -233,15 +233,6 @@ struct regex_grep_task
 		grep_tasks = b2::task::executor::get().make();
 	}
 
-	void dir_scan(value_ref dir)
-	{
-		grep_tasks->queue([this, dir] {
-			file_dirscan(dir,
-				reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
-				this);
-		});
-	}
-
 	static void dirscan_callback(regex_grep_task * self,
 		OBJECT * path,
 		int found,
@@ -268,9 +259,12 @@ struct regex_grep_task
 			{
 				if (glob(glob_pattern->str(), filename.c_str()) == 0)
 				{
-					// We have a glob match for this file.
-					auto filedata = file_preload(filepath);
-					file_grep(filepath, *filedata);
+					// We have a glob match for this file. We can queue it up
+					// for the possibly parallel grep.
+					grep_tasks->queue([this, filepath] {
+						auto filedata = file_preload(filepath);
+						file_grep(filepath, *filedata);
+					});
 				}
 			}
 			return;
@@ -278,7 +272,9 @@ struct regex_grep_task
 		// Subdir, or equivalent. If indicated, recurse scan subdirectories.
 		if (recursive_glob)
 		{
-			dir_scan(file);
+			file_dirscan(file,
+				reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
+				this);
 			return;
 		}
 	}
@@ -322,11 +318,8 @@ struct regex_grep_task
 		}
 
 		// Append this file's results to the global results.
-		if (!result->empty())
-		{
-			scope_lock_t lock(mx);
-			intermediate.emplace_back(result.release());
-		}
+		scope_lock_t lock(mx);
+		intermediate.emplace_back(result.release());
 	}
 
 	void wait() { grep_tasks->wait(); }
@@ -369,7 +362,9 @@ list_ref b2::regex_grep(list_cref directories,
 	regex_grep_task task(list_cref(*globs), patterns, sub_expr, options);
 	for (auto dir : directories)
 	{
-		task.dir_scan(dir);
+		file_dirscan(dir,
+			reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
+			&task);
 	}
 	task.wait();
 
