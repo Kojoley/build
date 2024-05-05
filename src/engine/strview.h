@@ -49,7 +49,7 @@ template<> struct sv_to_uchar<char>
 # pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
 
-template<class Ch> std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> constexpr std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -104,7 +104,7 @@ template<class Ch> std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch c
     return static_cast<std::size_t>( -1 );
 }
 
-template<class Ch> std::size_t find_last_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> constexpr std::size_t find_last_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -174,7 +174,7 @@ template<class Ch> std::size_t find_last_of( Ch const* p_, Ch const* s, std::siz
     return npos;
 }
 
-template<class Ch> std::size_t find_first_not_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> constexpr std::size_t find_first_not_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -237,7 +237,7 @@ template<class Ch> std::size_t find_first_not_of( Ch const* p_, std::size_t n_, 
     return static_cast<std::size_t>( -1 );
 }
 
-template<class Ch> std::size_t find_last_not_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> constexpr std::size_t find_last_not_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -451,13 +451,13 @@ public:
 
     // element access
 
-    const_reference operator[]( size_type pos ) const noexcept
+    constexpr const_reference operator[]( size_type pos ) const noexcept
     {
         assert( pos < size() );
         return p_[ pos ];
     }
 
-    const_reference at( size_type pos ) const
+    constexpr const_reference at( size_type pos ) const
     {
         if( pos >= size() )
         {
@@ -467,13 +467,13 @@ public:
         return p_[ pos ];
     }
 
-    const_reference front() const noexcept
+    constexpr const_reference front() const noexcept
     {
         assert( !empty() );
         return p_[ 0 ];
     }
 
-    const_reference back() const noexcept
+    constexpr const_reference back() const noexcept
     {
         assert( !empty() );
         return p_[ n_ - 1 ];
@@ -486,7 +486,7 @@ public:
 
     // modifiers
 
-    void remove_prefix( size_type n ) noexcept
+    constexpr void remove_prefix( size_type n ) noexcept
     {
         assert( n <= size() );
 
@@ -494,14 +494,14 @@ public:
         n_ -= n;
     }
 
-    void remove_suffix( size_type n ) noexcept
+    constexpr void remove_suffix( size_type n ) noexcept
     {
         assert( n <= size() );
 
         n_ -= n;
     }
 
-    void swap( basic_string_view& s ) noexcept
+    constexpr void swap( basic_string_view& s ) noexcept
     {
         std::swap( p_, s.p_ );
         std::swap( n_, s.n_ );
@@ -509,7 +509,7 @@ public:
 
     // string operations
 
-    size_type copy( Ch* s, size_type n, size_type pos = 0 ) const
+    constexpr size_type copy( Ch* s, size_type n, size_type pos = 0 ) const
     {
         if( pos > size() )
         {
@@ -523,7 +523,7 @@ public:
         return rlen;
     }
 
-    basic_string_view substr( size_type pos = 0, size_type n = npos ) const
+    constexpr basic_string_view substr( size_type pos = 0, size_type n = npos ) const
     {
         if( pos > size() )
         {
@@ -537,7 +537,7 @@ public:
 
     // compare
 
-    int compare( basic_string_view str ) const noexcept
+    constexpr int compare( basic_string_view str ) const noexcept
     {
         std::size_t rlen = (std::min)( size(), str.size() );
 
@@ -616,7 +616,7 @@ public:
         return find( str.data(), pos, str.size() );
     }
 
-    size_type find( Ch c, size_type pos = 0 ) const noexcept
+    constexpr size_type find( Ch c, size_type pos = 0 ) const noexcept
     {
         if( pos >= size() ) return npos;
 
@@ -625,7 +625,7 @@ public:
         return r? r - data(): npos;
     }
 
-    size_type find( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type find( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( n == 1 ) return find( s[0], pos );
 
@@ -661,7 +661,7 @@ public:
         return rfind( str.data(), pos, str.size() );
     }
 
-    size_type rfind( Ch c, size_type pos = npos ) const noexcept
+    constexpr size_type rfind( Ch c, size_type pos = npos ) const noexcept
     {
         size_type n = size();
 
@@ -685,7 +685,7 @@ public:
         return npos;
     }
 
-    size_type rfind( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type rfind( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( n > size() ) return npos;
 
@@ -727,7 +727,7 @@ public:
         return find( c, pos );
     }
 
-    size_type find_first_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type find_first_of( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( n == 0 || pos >= size() ) return npos;
         if( n == 1 ) return find( s[0], pos );
@@ -752,7 +752,7 @@ public:
         return rfind( c, pos );
     }
 
-    size_type find_last_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type find_last_of( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( n == 1 )
         {
@@ -786,7 +786,7 @@ public:
         return find_first_not_of( str.data(), pos, str.size() );
     }
 
-    size_type find_first_not_of( Ch c, size_type pos = 0 ) const noexcept
+    constexpr size_type find_first_not_of( Ch c, size_type pos = 0 ) const noexcept
     {
         for( std::size_t i = pos; i < n_; ++i )
         {
@@ -796,7 +796,7 @@ public:
         return npos;
     }
 
-    size_type find_first_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type find_first_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( pos >= size() ) return npos;
         if( n == 1 ) return find_first_not_of( s[0], pos );
@@ -816,7 +816,7 @@ public:
         return find_last_not_of( str.data(), pos, str.size() );
     }
 
-    size_type find_last_not_of( Ch c, size_type pos = npos ) const noexcept
+    constexpr size_type find_last_not_of( Ch c, size_type pos = npos ) const noexcept
     {
         size_type m = size();
 
@@ -840,7 +840,7 @@ public:
         return npos;
     }
 
-    size_type find_last_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    constexpr size_type find_last_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
     {
         if( n == 1 )
         {
@@ -874,7 +874,7 @@ public:
         return find( sv ) != npos;
     }
 
-    bool contains( Ch c ) const noexcept
+    constexpr bool contains( Ch c ) const noexcept
     {
         Ch const* p = data();
         size_type n = size();
