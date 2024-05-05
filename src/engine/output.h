@@ -32,12 +32,12 @@ void out_putc(const char c);
 void err_putc(const char c);
 void out_data(char const * const s);
 void err_data(char const * const s);
-void out_printf(char const * const f, ...);
-void err_printf(char const * const f, ...);
+void out_printf(char const * const f, ...) B2_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+void err_printf(char const * const f, ...) B2_ATTRIBUTE_FORMAT_PRINTF(1, 2);
 
 // Output current errno value & description along with given string.
 void errno_puts(char const * const s);
-void errno_printf(char const * const f, ...);
+void errno_printf(char const * const f, ...) B2_ATTRIBUTE_FORMAT_PRINTF(1, 2);
 
 OBJECT * outf_int( int const value );
 OBJECT * outf_double( double const value );
