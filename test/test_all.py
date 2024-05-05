@@ -40,6 +40,13 @@ def iterfutures(futures, cancel_handler):
     except TimeoutError as e:
         def reraise():
             raise e from None
+            try:
+                from pystack.engine import get_process_threads
+            except ImportError:
+                pass
+            else:
+                get_process_threads()
+                return futures[future], float('nan'), e, [('TIMEOUT', '')]
 
         for future in futures:
             if future.running():
@@ -55,12 +62,16 @@ def iterfutures(futures, cancel_handler):
 
 
 def run_test(test):
+    import os
+    import faulthandler
+    faulthandler.dump_traceback_later(800, exit=True)
     ts = time.perf_counter()
     exc = None
     try:
         __import__(test)
     except BaseException as e:
         exc = e
+    faulthandler.cancel_dump_traceback_later()
     annotations = BoostBuild.annotations.copy()
     BoostBuild.annotations.clear()
     return test, time.perf_counter() - ts, exc, annotations
@@ -119,6 +130,11 @@ def run_tests(critical_tests, other_tests):
         except concurrent.futures.process.BrokenProcessPool:
             # It could be us who broke the pool by terminating its threads
             if not cancelled:
+                print('\n\n\n*** during test %s ***\n\n\n' % test)
+                print('running tests:')
+                for future in futures:
+                    if future.running():
+                        print('  %s' % test)
                 raise
         except KeyboardInterrupt:
             """This allows us to abort the testing manually using Ctrl-C."""
