@@ -100,6 +100,12 @@ def subprocess_run(*popenargs,
         try:
             stdout, stderr = process.communicate(input, timeout=timeout)
         except subprocess.TimeoutExpired as exc:
+            import signal
+            process.send_signal(signal.CTRL_C_EVENT)
+            try:
+                process.wait(timeout=0.1)
+            except subprocess.TimeoutExpired:
+                pass
             process.kill()
             # Despite the comment in subprocess.run it really never
             # populates TimeoutExpired with data.
