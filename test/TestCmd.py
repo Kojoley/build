@@ -81,6 +81,41 @@ def _clean():
 sys.exitfunc = _clean
 
 
+def subprocess_run(*popenargs,
+        input=None, capture_output=False, timeout=None, check=False, **kwargs):
+    """See subprocess.run"""
+    if input is not None:
+        if kwargs.get('stdin') is not None:
+            raise ValueError('stdin and input arguments may not both be used.')
+        kwargs['stdin'] = subprocess.PIPE
+
+    if capture_output:
+        if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+            raise ValueError('stdout and stderr arguments may not be used '
+                             'with capture_output.')
+        kwargs['stdout'] = subprocess.PIPE
+        kwargs['stderr'] = subprocess.PIPE
+
+    with subprocess.Popen(*popenargs, **kwargs) as process:
+        try:
+            stdout, stderr = process.communicate(input, timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            process.kill()
+            # Despite the comment in subprocess.run it really never
+            # populates TimeoutExpired with data.
+            exc.stdout, exc.stderr = process.communicate()
+            raise
+        except:  # Including KeyboardInterrupt, communicate handled that.
+            process.kill()
+            # We don't call process.wait() as .__exit__ does that for us.
+            raise
+        retcode = process.poll()
+        if check and retcode:
+            raise subprocess.CalledProcessError(retcode, process.args,
+                                                output=stdout, stderr=stderr)
+    return subprocess.CompletedProcess(process.args, retcode, stdout, stderr)
+
+
 def caller(tblist, skip):
     string = ""
     arr = []
@@ -427,13 +462,13 @@ class TestCmd:
             if type(stdin) is list:
                 stdin = "".join(stdin)
 
-        p = subprocess.run(cmd, input=stdin,
+        p = subprocess_run(cmd, input=stdin,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                            cwd=chdir, universal_newlines=universal_newlines, timeout=timeout)
         out = p.stdout
         err = p.stderr
 
-        if not isinstance(p.stdout, str):
+        if not type(out) is str:
             out = out.decode()
         if not type(err) is str:
             err = err.decode()
