@@ -269,12 +269,8 @@ struct regex_grep_task
 				if (glob(glob_pattern->str(), filename.c_str()) == 0)
 				{
 					// We have a glob match for this file.
-					auto do_grep = [this, filepath]() {
-						auto filedata = file_preload(filepath);
-						file_grep(filepath, *filedata);
-					};
-					do_grep();
-					// grep_tasks->queue(do_grep);
+					auto filedata = file_preload(filepath);
+					file_grep(filepath, *filedata);
 				}
 			}
 			return;
