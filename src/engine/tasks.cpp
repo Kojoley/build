@@ -62,7 +62,6 @@ inline bool sync::signal()
 	// Wait for wait() to get called.
 	if (!wait_arrived.load()) return false;
 	// Tell the waiter that we arrived.
-	std::unique_lock<std::mutex> lock(arrived_mx);
 	signal_arrived = true;
 	arrived_cv.notify_one();
 #endif
@@ -244,7 +243,6 @@ inline void executor::implementation::push_group(std::shared_ptr<group> g)
 
 inline void executor::implementation::call_signal()
 {
-	scope_lock_t lock(mx);
 #if B2_USE_STD_THREADS
 	call_cv.notify_one();
 #endif
@@ -298,10 +296,7 @@ inline void executor::implementation::stop()
 	}
 	for (auto & t : to_join)
 	{
-		{
-			scope_lock_t lock(mx);
-			call_cv.notify_all();
-		}
+		call_cv.notify_all();
 		t.join();
 	}
 #endif
