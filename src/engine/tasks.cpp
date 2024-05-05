@@ -10,7 +10,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "jam.h"
 #include "mod_sysinfo.h"
 #include "output.h"
-#include "types.h"
 
 #include <queue>
 #include <vector>
@@ -37,36 +36,34 @@ struct sync
 #endif
 };
 
+#if B2_USE_STD_THREADS
+
 inline sync::sync()
 {
-	#if B2_USE_STD_THREADS
 	wait_arrived = false;
 	signal_arrived = false;
-	#endif
 }
 
 inline void sync::wait()
 {
-	#if B2_USE_STD_THREADS
 	// Indicate that we waiting.
 	wait_arrived = true;
 	// Wait for the signal that we can proceed.
 	std::unique_lock<std::mutex> lock(arrived_mx);
 	arrived_cv.wait(lock, [this]() { return signal_arrived.load(); });
-	#endif
 }
 
 inline bool sync::signal()
 {
-	#if B2_USE_STD_THREADS
 	// Wait for wait() to get called.
 	if (!wait_arrived.load()) return false;
 	// Tell the waiter that we arrived.
 	signal_arrived = true;
 	arrived_cv.notify_one();
-	#endif
 	return true;
 }
+
+#endif
 
 /*
 A group of tasks that run in parallel within a limit of parallelism. The
@@ -81,8 +78,11 @@ struct group::implementation
 	unsigned stat_max_running = 0;
 	unsigned stat_total = 0;
 	unsigned stat_max_pending = 0;
-	mutex_t mx;
+
+#if B2_USE_STD_THREADS
+	std::mutex mx;
 	sync finished;
+#endif // B2_USE_STD_THREADS
 
 	inline implementation(executor & e, unsigned p)
 		: exec(e)
@@ -111,9 +111,9 @@ struct executor::implementation
 	std::vector<std::shared_ptr<group>> groups;
 	unsigned call_count = 0;
 	unsigned running_count = 0;
-	mutex_t mx;
 
 #if B2_USE_STD_THREADS
+	std::mutex mx;
 	std::vector<std::thread> runners;
 	std::condition_variable call_cv;
 #endif // B2_USE_STD_THREADS
@@ -145,6 +145,8 @@ struct executor::implementation
 	void runner();
 };
 
+#if B2_USE_STD_THREADS
+
 inline void group::implementation::call_queue(std::function<void()> f)
 {
 	// If we don't have parallel allotment. We opt to execute the call inline.
@@ -159,7 +161,7 @@ inline void group::implementation::call_queue(std::function<void()> f)
 	// parallelism limit.
 	auto the_call = [this, f]() {
 		{
-			scope_lock_t lock(mx);
+			std::unique_lock<std::mutex> lock(mx);
 			running += 1;
 			stat_max_running = std::max(running, stat_max_running);
 			stat_total += 1;
@@ -167,14 +169,14 @@ inline void group::implementation::call_queue(std::function<void()> f)
 		f();
 		bool signal_finished = false;
 		{
-			scope_lock_t lock(mx);
+			std::unique_lock<std::mutex> lock(mx);
 			running -= 1;
 			signal_finished = pending.empty() && running == 0;
 		}
 		if (signal_finished) finished.signal();
 	};
 	{
-		scope_lock_t lock(mx);
+		std::unique_lock<std::mutex> lock(mx);
 		pending.push(std::move(the_call));
 		stat_max_pending = std::max(unsigned(pending.size()), stat_max_pending);
 	}
@@ -187,7 +189,7 @@ inline std::function<void()> group::implementation::call_dequeue()
 	bool signal_finished = false;
 	std::function<void()> result;
 	{
-		scope_lock_t lock(mx);
+		std::unique_lock<std::mutex> lock(mx);
 		signal_finished = pending.empty() && running == 0;
 		// We only return tasks when we have them, and when we have enough
 		// parallelism.
@@ -217,35 +219,27 @@ inline executor::implementation::implementation(unsigned parallelism)
 	// No need to launch anything if we aren't parallel.
 	if (parallelism == 0) return;
 	// Launch the threads to cover the expected parallelism.
-	scope_lock_t lock(mx);
-	#if B2_USE_STD_THREADS
+	std::unique_lock<std::mutex> lock(mx);
 	runners.reserve(parallelism);
 	for (; parallelism > 0; --parallelism)
 	{
 		running_count += 1;
 		runners.emplace_back([this]() { runner(); });
 	}
-	#endif
 }
 
 inline void executor::implementation::push_group(std::shared_ptr<group> g)
 {
-	scope_lock_t lock(mx);
+	std::unique_lock<std::mutex> lock(mx);
 	groups.push_back(g);
 }
 
-inline void executor::implementation::call_signal()
-{
-	#if B2_USE_STD_THREADS
-	call_cv.notify_one();
-	#endif
-}
+inline void executor::implementation::call_signal() { call_cv.notify_one(); }
 
 inline std::function<void()> executor::implementation::call_get()
 {
 	std::function<void()> result;
-	scope_lock_t lock(mx);
-	#if B2_USE_STD_THREADS
+	std::unique_lock<std::mutex> lock(mx);
 	// We only dequeue task calls when we have a thread to run them.
 	if (call_count < runners.size())
 	{
@@ -261,39 +255,38 @@ inline std::function<void()> executor::implementation::call_get()
 	}
 	// We don't have tasks to run, wait for some to become available.
 	call_cv.wait(lock);
-	#endif
 	return result;
 }
 
 inline void executor::implementation::call_done()
 {
-	scope_lock_t lock(mx);
+	std::unique_lock<std::mutex> lock(mx);
 	call_count -= 1;
 }
 
 inline bool executor::implementation::is_running()
 {
-	scope_lock_t lock(mx);
+	std::unique_lock<std::mutex> lock(mx);
 	return running_count > 0;
 }
 
 inline void executor::implementation::stop()
 {
-	#if B2_USE_STD_THREADS
 	// Stop all the runner threads (i.e. signal and wait).
 	std::vector<std::thread> to_join;
 	{
-		scope_lock_t lock(mx);
+		std::unique_lock<std::mutex> lock(mx);
 		running_count = 0;
 		to_join.swap(runners);
 	}
+	call_cv.notify_all();
 	for (auto & t : to_join)
 	{
-		call_cv.notify_all();
 		t.join();
 	}
-	#endif
 }
+
+#endif // B2_USE_STD_THREADS
 
 void executor::implementation::runner()
 {
@@ -316,13 +309,9 @@ void executor::implementation::runner()
 namespace {
 unsigned get_parallelism(int parallelism)
 {
-	#if B2_USE_STD_THREADS
 	return parallelism >= 0
 		? parallelism
 		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count());
-	#else
-	return 0;
-	#endif
 }
 } // namespace
 
