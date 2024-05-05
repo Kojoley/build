@@ -47,23 +47,34 @@ struct hash * hashinit(int32_t datalen, char const * name);
 void hash_free(struct hash *);
 void hashdone(struct hash *);
 
-typedef void (*hashenumerate_f)(void *, void *);
-
 /*
  * hashenumerate() - call f(i, data) on each item, i in the hash table. The
  * enumeration order is unspecified.
  */
 void hashenumerate(struct hash *, void (*f)(void *, void *), void * data);
 
-template <typename T, typename D>
-void hash_enumerate(struct hash * h, void (*f)(T *, D *), D * data)
+template <typename F>
+struct func_args;
+
+template <typename T, typename U>
+struct func_args<void(T *, U *)>
 {
-	hashenumerate(h, reinterpret_cast<hashenumerate_f>(f), data);
+    using A1 = T;
+    using A2 = U;
+};
+
+template <typename T, typename D, void f(T *, D *)>
+void hash_enumerate_trampoline(void * t, void * d)
+{
+    f(static_cast<T *>(t), static_cast<D *>(d));
 }
-template <typename T, typename D>
-void hash_enumerate(struct hash * h, void (*f)(T *, D *))
+
+template <typename F, F f>
+void hash_enumerate(struct hash * h, void * data = nullptr)
 {
-	hashenumerate(h, reinterpret_cast<hashenumerate_f>(f), nullptr);
+    using A1 = typename func_args<F>::A1;
+    using A2 = typename func_args<F>::A2;
+    hashenumerate(h, hash_enumerate_trampoline<A1, A2, f>, data);
 }
 
 /*

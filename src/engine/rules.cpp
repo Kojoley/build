@@ -194,8 +194,9 @@ static void bind_explicitly_located_target( target_ptr t, void * )
 
 void bind_explicitly_located_targets()
 {
-    if ( targethash )
-        hash_enumerate( targethash, bind_explicitly_located_target );
+    if (targethash)
+        hash_enumerate<decltype(bind_explicitly_located_target),
+            bind_explicitly_located_target>(targethash);
 }
 
 
@@ -479,7 +480,7 @@ void rules_done()
 {
     if ( targethash )
     {
-        hash_enumerate( targethash, freetarget );
+        hash_enumerate<decltype(freetarget), freetarget>(targethash);
         hashdone( targethash );
     }
     while ( settings_freelist )

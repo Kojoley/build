@@ -75,7 +75,8 @@ void clone_rules(std::tuple<std::string, std::string> source_target_modules)
         = bindmodule(value_ref(std::get<0>(source_target_modules)));
     module_ptr target_mod
         = bindmodule(value_ref(std::get<1>(source_target_modules)));
-    hash_enumerate(source_mod->rules, clone_rule, target_mod);
+    hash_enumerate<decltype(clone_rule), clone_rule>(
+        source_mod->rules, target_mod);
 }
 
 list_ref call_in(value_ref module_name,

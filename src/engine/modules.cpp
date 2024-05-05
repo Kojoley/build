@@ -447,6 +447,7 @@ LIST * module_rules( module_t * m )
     b2::list_ref result;
     if (!m) m = root_module();
     if (m->rules)
-        hash_enumerate(m->rules, &module_rules_add, &result);
+        hash_enumerate<decltype(module_rules_add), module_rules_add>(
+            m->rules, &result);
     return result.release();
 }
