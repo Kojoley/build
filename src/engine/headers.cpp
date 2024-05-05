@@ -135,12 +135,6 @@ LIST * headers1( LIST * l, OBJECT * file, int rec, b2::regex::program re[] )
     }
 #endif
 
-    if ( file->as_string().size == 0 )
-    {
-        /* If the scanning was fed empty file names we just ignore them. */
-        return l;
-    }
-
     if ( !( f = fopen( object_str( file ), "r" ) ) )
     {
         /* No source files will be generated when -n flag is passed */
