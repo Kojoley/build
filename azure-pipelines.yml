@@ -53,89 +53,21 @@ stages:
   dependsOn: []
   jobs:
 
-  - job: 'Linux_Default_Build'
-    strategy:
-      matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        ./.ci/linux-cxx-install.sh
-      displayName: Install
-    - bash: |
-        set -e
-        ./src/engine/build.sh --verbose
-      displayName: Build
-
-  - job: 'Linux_Clang_Only_Build'
-    strategy:
-      matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        ./.ci/linux-cxx-install.sh
-        sudo apt remove gcc g++
-      displayName: Install
-    - bash: |
-        set -e
-        ./src/engine/build.sh --verbose
-      displayName: Build
-
-  - job: 'Linux_Latest'
-    strategy:
-      matrix:
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - template: .ci/azp-linux-test.yml
-
-  - job: 'Windows_Latest'
-    strategy:
-      matrix:
-        VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}"}
-        Clang ${{variables.clang_latest}} (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    continueOnError: 'true'
-    steps:
-    - template: .ci/azp-windows-test.yml
-
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode  ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode 2 ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode 3 ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode 4 ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode 5 ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
         # GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
     - template: .ci/azp-macos-test.yml
 
-  - job: 'Linux_Sanitzer'
-    strategy:
-      matrix:
-        Address (GCC ${{variables.gcc_latest}}): {SANITIZER: "address-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Thread (GCC ${{variables.gcc_latest}}): {SANITIZER: "thread-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        UB (GCC ${{variables.gcc_latest}}): {SANITIZER: "undefined-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-    pool:
-      vmImage: $(VM_IMAGE)
-    continueOnError: 'true'
-    steps:
-    - template: .ci/azp-linux-sanitizer-test.yml
-
-- stage: Extra
-  dependsOn: []
-  jobs:
-
-  - job: 'macOS'
+  - job: 'macOS_2'
     strategy:
       matrix:
         Xcode ${{variables.xc_latest}} arm+x86/64: {
@@ -151,6 +83,39 @@ stages:
       vmImage: $(VM_IMAGE)
     steps:
     - template: .ci/azp-macos-extra.yml
+
+  - job: 'macOS_3'
+    strategy:
+      matrix:
+        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.3.1 2: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.3.1 3: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.3.1 4: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.3.1 5: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.2 2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.2 3: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.2 4: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.2 5: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.1 2: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.1 3: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.1 4: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.1 5: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
+        Xcode 13.4.1: {XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
+        Xcode 12.5.1: {XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.4: {XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
+        Xcode 11.7: {XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - template: .ci/azp-macos-test.yml
+
+
+- stage: Extra
+  dependsOn: []
+  jobs:
 
   - job: 'Linux'
     strategy:
@@ -268,22 +233,6 @@ stages:
       vmImage: $(VM_IMAGE)
     steps:
     - template: .ci/azp-windows-test.yml
-
-  - job: 'macOS'
-    strategy:
-      matrix:
-        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
-        Xcode 14.2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
-        Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
-        Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
-        Xcode 13.4.1: {XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
-        Xcode 12.5.1: {XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
-        Xcode 12.4: {XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
-        Xcode 11.7: {XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
-    pool:
-      vmImage: $(VM_IMAGE)
-    steps:
-    - template: .ci/azp-macos-test.yml
 
 - stage: Boost_Dev
   dependsOn: [Core, Extra]

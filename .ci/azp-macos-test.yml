@@ -20,16 +20,25 @@ steps:
   displayName: Test
 - bash: |
     set -e
-    ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model=32,64 ${TOOLSET:+toolset=$TOOLSET}
-  displayName: "No Warnings"
+    cd test
+    ./test_all.py ${TOOLSET}
+    cd ..
+  displayName: Test 2
 - bash: |
     set -e
-    ./bootstrap.sh ${TOOLSET}
-    ./b2 --prefix=$HOME/temp/.b2 install ${TOOLSET:+toolset=$TOOLSET}
-    rm ./b2
-    export PATH=$HOME/temp/.b2/bin:$PATH
-    cd $HOME
-    touch build.jam
-    b2 -v
-    b2 -n --debug-configuration ${TOOLSET:+toolset=$TOOLSET}
-  displayName: Bootstrap
+    cd test
+    ./test_all.py ${TOOLSET}
+    cd ..
+  displayName: Test 3
+- bash: |
+    set -e
+    cd test
+    ./test_all.py ${TOOLSET}
+    cd ..
+  displayName: Test 4
+- bash: |
+    set -e
+    cd test
+    ./test_all.py ${TOOLSET}
+    cd ..
+  displayName: Test 5
