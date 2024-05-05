@@ -430,8 +430,10 @@ class TestCmd:
         p = subprocess.run(cmd, input=stdin,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                            cwd=chdir, universal_newlines=universal_newlines, timeout=timeout)
+        out = p.stdout
+        err = p.stderr
 
-        if not type(out) is str:
+        if not isinstance(p.stdout, str):
             out = out.decode()
         if not type(err) is str:
             err = err.decode()
