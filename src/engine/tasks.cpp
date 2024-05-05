@@ -6,8 +6,6 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "tasks.h"
 
-#include <memory>
-
 b2::task_group::task_group() {}
 
 void b2::task_group::queue(const std::function<void()> & f) { f(); }
@@ -19,11 +17,11 @@ b2::task_executor::task_executor(unsigned parallelism /* = 0 */) {}
 std::unique_ptr<b2::task_group> b2::task_executor::make(
 	unsigned parallelism /* = 0 */)
 {
-	return std::unique_ptr<b2::task_group>(new b2::task_group);
+	return std::make_unique<b2::task_group>();
 }
 
 b2::task_executor & b2::task_executor::get()
 {
-	static task_executor e;
+	task_executor e;
 	return e;
 }
