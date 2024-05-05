@@ -235,19 +235,17 @@ struct regex_grep_task
 
 	void dir_scan(value_ref dir)
 	{
-		grep_tasks->queue([this, dir] {
-			file_dirscan(dir,
-				reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
-				this);
+        grep_tasks->queue([this, dir] {
+            file_dirscan(dir, &regex_grep_task::dirscan_callback, this);
 		});
 	}
 
-	static void dirscan_callback(regex_grep_task * self,
+	static void dirscan_callback(void * self,
 		OBJECT * path,
 		int found,
 		timestamp const * const)
 	{
-		self->dirscan_file(path);
+        static_cast<regex_grep_task *>(self)->dirscan_file(path);
 	}
 
 	void dirscan_file(const value_ref & file)
