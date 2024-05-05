@@ -438,7 +438,7 @@ cleanup:
 }
 
 
-LIST * hcache( TARGET * t, int rec, b2::regex::program re[], LIST * hdrscan )
+LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 {
     HCACHEDATA * c;
 

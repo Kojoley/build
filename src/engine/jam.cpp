@@ -212,6 +212,8 @@ static void run_unit_tests()
 
 int anyhow = 0;
 
+void regex_done();
+
 char const * saved_argv0;
 
 static void usage( const char * progname )
@@ -698,6 +700,7 @@ int main( int argc, char * * argv )
     search_done();
     class_done();
     modules_done();
+    regex_done();
     cwd_done();
     path_done();
     function_done();

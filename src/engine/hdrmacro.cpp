@@ -37,7 +37,7 @@
 #include "parse.h"
 #include "rules.h"
 #include "jam_strings.h"
-#include "regexp.h"
+#include "subst.h"
 #include "variable.h"
 #include "output.h"
 
@@ -62,19 +62,25 @@ static struct hash * header_macros_hash = 0;
 
 void macro_headers( TARGET * t )
 {
-    /* This regexp is used to detect lines of the form
-     * "#define  MACRO  <....>" or "#define  MACRO  "....."
-     * in the header macro files.
-     */
-    b2::regex::program re(
-        "^[     ]*#[    ]*define[   ]*([A-Za-z][A-Za-z0-9_]*)[  ]*"
-        "[<\"]([^\">]*)[\">].*$" );
-
+    static regexp * re = 0;
     FILE * f;
     char buf[ 1024 ];
 
     if ( DEBUG_HEADER )
         out_printf( "macro header scan for %s\n", object_str( t->name ) );
+
+    /* This regexp is used to detect lines of the form
+     * "#define  MACRO  <....>" or "#define  MACRO  "....."
+     * in the header macro files.
+     */
+    if ( !re )
+    {
+        OBJECT * re_str = object_new(
+            "^[     ]*#[    ]*define[   ]*([A-Za-z][A-Za-z0-9_]*)[  ]*"
+            "[<\"]([^\">]*)[\">].*$" );
+        re = regex_compile( re_str );
+        object_free( re_str );
+    }
 
     if ( !( f = fopen( object_str( t->boundname ), "r" ) ) )
     {
@@ -87,19 +93,18 @@ void macro_headers( TARGET * t )
     {
         HEADER_MACRO var;
         HEADER_MACRO * v = &var;
-        auto re_i = re.search(buf);
 
-        if ( re_i && re_i[1].begin() )
+        if ( regexec( re, buf ) && re->startp[ 1 ] )
         {
             OBJECT * symbol;
             int found;
             /* we detected a line that looks like "#define  MACRO  filename */
-            std::string macro(re_i[1].begin(), re_i[1].end());
-            std::string filename(re_i[2].begin(), re_i[2].end());
+            ( (char *)re->endp[ 1 ] )[ 0 ] = '\0';
+            ( (char *)re->endp[ 2 ] )[ 0 ] = '\0';
 
             if ( DEBUG_HEADER )
                 out_printf( "macro '%s' used to define filename '%s' in '%s'\n",
-                    macro.c_str(), filename.c_str(), object_str( t->boundname )
+                    re->startp[ 1 ], re->startp[ 2 ], object_str( t->boundname )
                     );
 
             /* add macro definition to hash table */
@@ -107,13 +112,13 @@ void macro_headers( TARGET * t )
                 header_macros_hash = hashinit( sizeof( HEADER_MACRO ),
                     "hdrmacros" );
 
-            symbol = object_new( macro.c_str() );
+            symbol = object_new( re->startp[ 1 ] );
             v = (HEADER_MACRO *)hash_insert( header_macros_hash, symbol, &found
                 );
             if ( !found )
             {
                 v->symbol = symbol;
-                v->filename = object_new( filename.c_str() );  /* never freed */
+                v->filename = object_new( re->startp[ 2 ] );  /* never freed */
             }
             else
                 object_free( symbol );

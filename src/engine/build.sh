@@ -482,6 +482,7 @@ rules.cpp \
 scan.cpp \
 search.cpp \
 startup.cpp \
+subst.cpp \
 timestamp.cpp \
 value.cpp \
 variable.cpp \

@@ -18,6 +18,9 @@
 
 void headers( TARGET * t );
 
-LIST * headers1( LIST *l, OBJECT * file, int rec, b2::regex::program re[] );
+#ifdef OPT_HEADER_CACHE_EXT
+struct regexp;
+LIST * headers1( LIST *l, OBJECT * file, int rec, struct regexp *re[] );
+#endif
 
 #endif

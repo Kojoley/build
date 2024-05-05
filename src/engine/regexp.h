@@ -4,8 +4,8 @@
  * Caveat:  this is V8 regexp(3) [actually, a reimplementation thereof],
  * not the System V one.
  */
-#ifndef B2_REGEXP_H
-#define B2_REGEXP_H
+#ifndef REGEXP_DWA20011023_H
+#define REGEXP_DWA20011023_H
 
 #include "config.h"
 
@@ -15,41 +15,59 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #define NSUBEXP 10
+typedef struct regexp
+{
+	char const * startp[NSUBEXP];
+	char const * endp[NSUBEXP];
+	char regstart; /* Internal use only. */
+	char reganch; /* Internal use only. */
+	char * regmust; /* Internal use only. */
+	int32_t regmlen; /* Internal use only. */
+	char program[1]; /* Unwarranted chumminess with compiler. */
+} regexp;
+
+regexp * regcomp(char const * exp);
+int32_t regexec(regexp * prog, char const * string);
+void regerror(char const * s);
+
+/*
+ * The first byte of the regexp internal "program" is actually this magic
+ * number; the start node begins in the second byte.
+ */
+#define MAGIC 0234
 
 namespace b2 { namespace regex {
+using regex_ptr = std::unique_ptr<regexp, std::function<void(regexp *)>>;
 
-// The resulting matches for a regex match. Expression 0 is the full match.
-// And expressions [1,NSUBEXP] are the subexpressions matched.
-struct regex_expr
+inline regex_ptr make_regex(const string_t & pattern)
 {
-	char const * startp[NSUBEXP] = { nullptr };
-	char const * endp[NSUBEXP] = { nullptr };
-};
+	// TODO: Fix regcomp to not const-cast pattern.
+	return regex_ptr(
+		regcomp(pattern.c_str()), [](regexp * r) { BJAM_FREE(r); });
+}
 
-// The compiled regex program to match with.
-struct regex_prog;
+inline regex_ptr make_regex(const char * pattern)
+{
+	// TODO: Fix regcomp to not const-cast pattern.
+	return regex_ptr(regcomp(pattern), [](regexp * r) { BJAM_FREE(r); });
+}
 
 struct program
 {
-	program() = default;
+	program(const char * pattern);
 	program(program &&) = default;
-	program(const program &) = default;
-	explicit program(const char * pattern);
 
 	// types
 	struct result_iterator;
-
-	void reset(const char * pattern);
 
 	result_iterator search(const char * str_begin, const char * str_end);
 	result_iterator search(const char * str_begin);
 
 	private:
-	const regex_prog * compiled = nullptr;
-
-	static regex_prog & compile(const char * patter);
+	regex_ptr compiled;
 };
 
 struct program::result_iterator
@@ -60,7 +78,7 @@ struct program::result_iterator
 	using pointer = const value_type *;
 	using reference = const value_type &;
 
-	result_iterator(const regex_prog & c, const char * b, const char * e);
+	result_iterator(regexp & c, const char * b, const char * e);
 	result_iterator(const result_iterator & o) = default;
 	result_iterator(result_iterator && o) = default;
 
@@ -74,16 +92,14 @@ struct program::result_iterator
 	explicit inline operator bool() const { return match.str != nullptr; }
 	inline value_type operator[](std::size_t i) const
 	{
-		return i <= NSUBEXP ? value_type { expressions.startp[i],
-			std::size_t(expressions.endp[i] - expressions.startp[i]) }
+		return i <= NSUBEXP ? value_type { compiled.startp[i],
+			std::size_t(compiled.endp[i] - compiled.startp[i]) }
 							: value_type { nullptr, 0 };
 	}
 
 	private:
-	const regex_prog * compiled = nullptr;
-	regex_expr expressions;
+	regexp & compiled;
 	value_type match;
-	value_type rest;
 
 	void advance();
 };
