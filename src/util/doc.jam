@@ -303,6 +303,8 @@ local rule print-help-usage ( )
         B2 system. ;
     print.list-item -jx\;
         Run up to '"x"' commands concurrently. ;
+    print.list-item -lN\;
+        Sets action timeout to N seconds, 0 is no limit. Default is 600. ;
     print.list-item -n\;
         Do not execute build commands. Instead print out the commands as they
         would be executed if building. ;

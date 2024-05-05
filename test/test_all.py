@@ -33,12 +33,25 @@ for s in ("BOOST_ROOT", "BOOST_BUILD_PATH", "JAM_TOOLSET", "BCCROOT",
 BoostBuild.set_defer_annotations(1)
 
 
-def iterfutures(futures):
-    while futures:
-        done, futures = concurrent.futures.wait(
-            futures,return_when=concurrent.futures.FIRST_COMPLETED)
-        for future in done:
-            yield future, futures
+def iterfutures(futures, cancel_handler):
+    try:
+        for future in concurrent.futures.as_completed(futures, timeout=900):
+            yield future
+    except TimeoutError as e:
+        def reraise():
+            raise e from None
+
+        for future in futures:
+            if future.running():
+                future.result = staticmethod(reraise)
+            else:
+                future.cancel()
+
+        for future in futures:
+            if future.running():
+                yield future
+
+        cancel_handler()
 
 
 def run_test(test):
@@ -75,7 +88,7 @@ def run_tests(critical_tests, other_tests):
     cancelled = False
     executor = concurrent.futures.ProcessPoolExecutor()
 
-    def handler(sig, frame):
+    def handler(*args):
         cancelled = True
         processes = executor._processes.values()
         executor.shutdown(wait=False, cancel_futures=True)
@@ -89,12 +102,10 @@ def run_tests(critical_tests, other_tests):
     start_ts = time.perf_counter()
     isatty = sys.stdout.isatty() or "--interactive" in sys.argv
     futures = {executor.submit(run_test, test): test for test in all_tests}
-    for future, pending in iterfutures(futures):
+    for future in iterfutures(futures, handler):
         test = futures[future]
         if not xml:
             s = "%%-%ds :" % max_test_name_len % test
-            if isatty:
-                s = "\r{}".format(s)
             print(s, end='')
 
         passed = 0
@@ -114,6 +125,11 @@ def run_tests(critical_tests, other_tests):
             print("\n\nTesting was cancelled by external signal.")
             cancelled = True
             break
+        except TimeoutError:
+            if xml:
+                BoostBuild.annotation('failure', 'TIMEOUT')
+            else:
+                print('TIMEOUT', end=' ')
         except SystemExit as e:
             """This is the regular way our test scripts are supposed to report
             test failures."""
@@ -154,13 +170,13 @@ def run_tests(critical_tests, other_tests):
                 BoostBuild.flush_annotations()
 
             if isatty:
-                msg = ", ".join(futures[future] for future in pending if future.running())
+                msg = ", ".join(futures[future] for future in futures if future.running())
                 if msg:
-                    msg = "[{}/{}] {}".format(len(futures) - len(pending),len(futures),msg)
+                    msg = "[{}/{}] {}".format(sum(future.done() for future in futures),len(futures),msg)
                     max_len = max_test_name_len + len(" :PASSED 12345ms")
                     if len(msg) > max_len:
                         msg = msg[:max_len - 3] + "..."
-                    print(msg, end='')
+                    print(msg, end='\r')
         else:
             rs = "succeed"
             if not passed:

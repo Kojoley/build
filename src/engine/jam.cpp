@@ -170,7 +170,7 @@ struct globs globs =
     { 0, 1 },   /* debug ... */
 #endif
     0,          /* output commands, not run them */
-    0,          /* action timeout */
+    600,        /* action timeout */
     0           /* maximum buffer size zero is all output */
 };
 

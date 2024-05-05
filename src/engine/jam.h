@@ -492,7 +492,7 @@ struct globs
     char   debug[ DEBUG_MAX ];
     FILE * out;                 /* mirror output here */
     long   timeout;             /* number of seconds to limit actions to,
-                                 * default 0 for no limit.
+                                 * 0 for no limit.
                                  */
     int    dart;                /* output build and test results formatted for
                                  * Dart
