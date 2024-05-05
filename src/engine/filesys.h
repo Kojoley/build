@@ -139,7 +139,6 @@ class file_buffer
     private:
     std::unique_ptr<char[]> data_c;
     std::size_t data_size = 0;
-    FILE * file = nullptr;
 };
 }}
 
