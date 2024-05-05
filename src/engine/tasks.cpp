@@ -222,15 +222,8 @@ inline executor::implementation::implementation(unsigned parallelism)
 	runners.reserve(parallelism);
 	for (; parallelism > 0; --parallelism)
 	{
-		try
-		{
-			runners.emplace_back([this]() { runner(); });
-			running_count += 1;
-		}
-		catch (const std::system_error & e)
-		{
-			err_printf("Task execution error: %s");
-		}
+		running_count += 1;
+		runners.emplace_back([this]() { runner(); });
 	}
 #endif
 }
@@ -355,8 +348,7 @@ executor::~executor() { i->stop(); }
 
 std::shared_ptr<group> executor::make(int parallelism)
 {
-	auto result = std::make_shared<group>(*this,
-		std::min(unsigned(i->runners.size()), get_parallelism(parallelism)));
+	auto result = std::make_shared<group>(*this, get_parallelism(parallelism));
 	i->push_group(result);
 	return result;
 }
