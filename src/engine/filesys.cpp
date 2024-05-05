@@ -1,6 +1,6 @@
 /*
  *  Copyright 2001-2004 David Abrahams.
- *  Copyright 2005-2023 René Ferdinand Rivera Morell.
+ *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
@@ -40,7 +40,6 @@
 #include <sys/stat.h>
 #include <cstdio>
 #include <cstdint>
-#include <mutex>
 
 #ifdef OS_NT
 #define WIN32_LEAN_AND_MEAN
@@ -70,20 +69,14 @@ void file_archive_query_( file_archive_info_t * const );
 static void file_archivescan_impl( OBJECT * path, archive_scanback func,
                                    void * closure );
 static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure );
+static void free_file_archive_info( void * xarchive, void * data );
+static void free_file_info( void * xfile, void * data );
 
 static void remove_files_atexit( void );
 
-static b2::core::concurrent_hash<file_info_t> & filecache()
-{
-    static b2::core::concurrent_hash<file_info_t> cache("file_info");
-    return cache;
-}
 
-static b2::core::concurrent_hash<file_archive_info_t> & archivecache()
-{
-    static b2::core::concurrent_hash<file_archive_info_t> cache("file_archive_info");
-    return cache;
-}
+static struct hash * filecache_hash;
+static struct hash * archivecache_hash;
 
 
 /*
@@ -97,11 +90,24 @@ static b2::core::concurrent_hash<file_archive_info_t> & archivecache()
 file_archive_info_t * file_archive_info( OBJECT * const path, int * found )
 {
     OBJECT * path_key = path_as_key( path );
-    auto info = archivecache().get( path_key, file_archive_info_t(path_key) );
-    file_archive_info_t * archive = info.first;
-    if ( info.second )
+    file_archive_info_t * archive;
+
+    if ( !archivecache_hash )
+        archivecache_hash = hashinit( sizeof( file_archive_info_t ),
+            "file_archive_info" );
+
+    archive = (file_archive_info_t *)hash_insert( archivecache_hash, path_key,
+            found );
+
+    if ( !*found )
+    {
+        archive->name = path_key;
+        archive->file = 0;
+        archive->members = FL0;
+    }
+    else
         object_free( path_key );
-    *found = info.second ? 1 : 0;
+
     return archive;
 }
 
@@ -196,8 +202,17 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 void file_done()
 {
     remove_files_atexit();
-    filecache().reset();
-    archivecache().reset();
+    if ( filecache_hash )
+    {
+        hashenumerate( filecache_hash, free_file_info, (void *)0 );
+        hashdone( filecache_hash );
+    }
+
+    if ( archivecache_hash )
+    {
+        hashenumerate( archivecache_hash, free_file_archive_info, (void *)0 );
+        hashdone( archivecache_hash );
+    }
 }
 
 
@@ -212,11 +227,21 @@ void file_done()
 file_info_t * file_info( OBJECT * const path, int * found )
 {
     OBJECT * path_key = path_as_key( path );
-    auto info = filecache().get( path_key, file_info_t(path_key) );
-    if ( info.second )
+    file_info_t * finfo;
+
+    if ( !filecache_hash )
+        filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
+
+    finfo = (file_info_t *)hash_insert( filecache_hash, path_key, found );
+    if ( !*found )
+    {
+        finfo->name = path_key;
+        finfo->files = L0;
+    }
+    else
         object_free( path_key );
-    *found = info.second ? 1 : 0;
-    return info.first;
+
+    return finfo;
 }
 
 
@@ -468,6 +493,22 @@ static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure )
 }
 
 
+static void free_file_archive_info( void * xarchive, void * data )
+{
+    file_archive_info_t * const archive = (file_archive_info_t *)xarchive;
+
+    if ( archive ) filelist_free( archive->members );
+}
+
+
+static void free_file_info( void * xfile, void * data )
+{
+    file_info_t * const file = (file_info_t *)xfile;
+    object_free( file->name );
+    list_free( file->files );
+}
+
+
 static void remove_files_atexit( void )
 {
     LISTITER iter = list_begin( files_to_remove );
@@ -549,6 +590,7 @@ FILELIST * filelist_push_front( FILELIST * list, OBJECT * path )
     item->value = b2::jam::make_ptr<file_info_t>();
 
     file = item->value;
+    memset( file, 0, sizeof( *file ) );
 
     file->name = path;
     file->files = L0;
@@ -579,7 +621,10 @@ FILELIST * filelist_pop_front( FILELIST * list )
     if ( item )
     {
         if ( item->value )
+        {
+            free_file_info( item->value, 0 );
             b2::jam::free_ptr( item->value );
+        }
 
         list->head = item->next;
         list->size--;
@@ -610,7 +655,7 @@ void filelist_free( FILELIST * list )
 
 int filelist_empty( FILELIST * list )
 {
-    return ( list == nullptr );
+    return ( list == FL0 );
 }
 
 
