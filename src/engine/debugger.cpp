@@ -867,7 +867,6 @@ static const char * debug_format_message( const char * format, va_list vargs )
     }
 }
 
-B2_ATTRIBUTE_FORMAT_PRINTF(1, 2)
 static void debug_error( const char * format, ... )
 {
     va_list args;

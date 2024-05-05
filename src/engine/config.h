@@ -53,16 +53,6 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 #define B2_USE_STD_THREADS 1
 #endif
 
-#if defined __MINGW32__
-#define B2_ATTRIBUTE_FORMAT_PRINTF(string_index, first_to_check) \
-    __attribute__((__format__(__MINGW_PRINTF_FORMAT, string_index, first_to_check)))
-#elif defined __GNUG__
-#define B2_ATTRIBUTE_FORMAT_PRINTF(string_index, first_to_check) \
-    __attribute__((__format__(__printf__, string_index, first_to_check)))
-#else
-#define B2_ATTRIBUTE_FORMAT_PRINTF(string_index, first_to_check)
-#endif
-
 #include <cassert>
 
 namespace b2 {
