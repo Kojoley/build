@@ -5380,7 +5380,8 @@ b2::jam::module_scope_in_function::module_scope_in_function(
     FRAME * frame_, const char * module_name_)
     : module_frame(frame_)
 {
-    saved_module = b2::ensure_valid(module_frame->module);
+    auto stack = stack_global();
+    stack->push(b2::ensure_valid(module_frame->module));
     module_frame->module = module_name_ == nullptr
         ? b2::ensure_valid(root_module())
         : b2::ensure_valid(bindmodule(value_ref(module_name_)));
@@ -5388,7 +5389,8 @@ b2::jam::module_scope_in_function::module_scope_in_function(
 
 b2::jam::module_scope_in_function::~module_scope_in_function()
 {
-    module_frame->module = b2::ensure_valid(saved_module);
+    auto stack = stack_global();
+    module_frame->module = b2::ensure_valid(stack->pop<module_t *>());
 }
 
 std::string b2::jam::backtrace::to_string(frame * f)
