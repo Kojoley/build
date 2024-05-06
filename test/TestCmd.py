@@ -110,7 +110,7 @@ def subprocess_run(*popenargs,
             # Despite the comment in subprocess.run it really never
             # populates TimeoutExpired with data.
             exc.stdout, exc.stderr = process.communicate()
-            raise
+            raise exc from None
         except:  # Including KeyboardInterrupt, communicate handled that.
             process.kill()
             # We don't call process.wait() as .__exit__ does that for us.
