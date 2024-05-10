@@ -42,7 +42,7 @@ fi
 echo ">>>>>"
 echo ">>>>> APT: INSTALL: ${PACKAGES}.."
 echo ">>>>>"
-${APT_GET} install ${PACKAGES}
+${APT_GET} install python3 ${PACKAGES}
 fi
 
 # Use, modification, and distribution are
