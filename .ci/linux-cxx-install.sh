@@ -9,7 +9,8 @@ if command -v sudo ; then
     SUDO="sudo -E"
 fi
 
-APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends"
+# APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends"
+APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq"
 
 set -e
 if [ -n "${PACKAGES}" ] ; then
@@ -36,10 +37,6 @@ if [ -n "${REPO}" ] ; then
              ${SUDO} apt-add-repository "deb http://apt.llvm.org/${VERSION_CODENAME}/ llvm-toolchain-${VERSION_CODENAME}${REPO##llvm} main"
              ;;
      esac
-echo ">>>>>"
-echo ">>>>> APT: UPDATE.."
-echo ">>>>>"
-${APT_GET} update
 fi
 
 echo ">>>>>"
