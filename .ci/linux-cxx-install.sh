@@ -14,6 +14,7 @@ APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq"
 
 set -e
 if [ -n "${PACKAGES}" ] ; then
+su -
 echo ">>>>>"
 echo ">>>>> APT: UPDATE.."
 echo ">>>>>"
