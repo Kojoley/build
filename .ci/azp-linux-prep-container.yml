@@ -1,5 +1,6 @@
 steps:
 - script: |
+    set -e
     which docker
     docker exec -u root container mv /etc/sudoers /etc/sudoers.bak
     docker exec -u root container apt-get -o Acquire::Retries=3 -qq update

@@ -73,9 +73,9 @@ stages:
         GCC 9  - Ubuntu 20.04 : { PACKAGES: build-essential, CONTAINER: "ubuntu:20.04" }
         GCC 8  - Debian 10    : { PACKAGES: build-essential, CONTAINER: "debian:10" }
         GCC 7  - Ubuntu 18.04 : { PACKAGES: build-essential, CONTAINER: "ubuntu:18.04" }
-        GCC 6  - Debian 9     : { PACKAGES: build-essential, CONTAINER: "debian:9" }
+        GCC 6  - Debian 9     : { PACKAGES: build-essential, CONTAINER: "debian/eol:stretch" }
         GCC 5  - Ubuntu 16.04 : { PACKAGES: build-essential, CONTAINER: "ubuntu:16.04" }
-        GCC 4.9 - Debian 8    : { PACKAGES: build-essential, CONTAINER: "debian:8" }
+        GCC 4.9 - Debian 8    : { PACKAGES: build-essential, CONTAINER: "debian/eol:jessie" }
 
         Clang 18 - Ubuntu 24.04 : { PACKAGES: clang, CONTAINER: "ubuntu:24.04" }
         Clang 14 - Debian 12    : { PACKAGES: clang, CONTAINER: "debian:12" }
@@ -84,9 +84,9 @@ stages:
         Clang 10 - Ubuntu 20.04 : { PACKAGES: clang, CONTAINER: "ubuntu:20.04" }
         Clang 7  - Debian 10    : { PACKAGES: clang, CONTAINER: "debian:10" }
         Clang 6  - Ubuntu 18.04 : { PACKAGES: clang, CONTAINER: "ubuntu:18.04" }
-        Clang 3.8 - Debian 9    : { PACKAGES: clang, CONTAINER: "debian:9" }
+        Clang 3.8 - Debian 9    : { PACKAGES: clang, CONTAINER: "debian/eol:stretch" }
         Clang 3.8 - Ubuntu 16.04: { PACKAGES: clang, CONTAINER: "ubuntu:16.04" }
-        Clang 3.5 - Debian 8    : { PACKAGES: clang, CONTAINER: "debian:8" }
+        Clang 3.5 - Debian 8    : { PACKAGES: clang, CONTAINER: "debian/eol:jessie" }
     pool:
       vmImage: ubuntu-latest
     container:
