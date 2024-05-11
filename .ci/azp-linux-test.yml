@@ -13,11 +13,9 @@ steps:
 - bash: |
     set -e
     cd src/engine
-    set PATH=${PATH};${CXX_PATH}
     ./build.sh ${TOOLSET}
     ./b2 -v
     cd ../..
-    echo "using ${TOOLSET%%-[0-9]*} : : ${CXX} ;" > ${HOME}/user-config.jam
   displayName: Build
 - bash: |
     set -e
