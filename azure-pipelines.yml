@@ -89,7 +89,9 @@ stages:
         Clang 3.5 - Debian 8    : { PACKAGES: clang, CONTAINER: "debian:8" }
     pool:
       vmImage: ubuntu-latest
-    container: $[ variables['CONTAINER'] ]
+    container:
+      image: $[ variables['CONTAINER'] ]
+      options: -u 0
     steps:
     #- template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
