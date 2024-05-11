@@ -91,7 +91,8 @@ stages:
       vmImage: ubuntu-latest
     container:
       image: $[ variables['CONTAINER'] ]
-      options: -u 0
+      options: --name container -v /usr/bin/docker:/tmp/docker:ro
     steps:
+    - script: whoami
     #- template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
