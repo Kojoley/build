@@ -1,8 +1,9 @@
 steps:
 - script: |
     which docker
-    /tmp/docker exec -t -u root container mv /etc/sudoers /etc/sudoers.bak
-    /tmp/docker exec -t -u root container apt-get -qq update
-    /tmp/docker exec -t -u root container apt-get -qq install sudo
-    /tmp/docker exec -t -u root container mv /etc/sudoers.bak /etc/sudoers
+    docker exec -u root container mv /etc/sudoers /etc/sudoers.bak
+    docker exec -u root container apt-get -o Acquire::Retries=3 -qq update
+    docker exec -u root container apt-get -o Acquire::Retries=3 -qq install sudo
+    docker exec -u root container mv /etc/sudoers.bak /etc/sudoers
   displayName: Sudorize
+  target: host
