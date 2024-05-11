@@ -94,5 +94,6 @@ stages:
       options: --name container
     steps:
     - script: whoami
+    - bash: ls -asCFR /etc/apt/
     - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
