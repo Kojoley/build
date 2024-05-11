@@ -9,24 +9,30 @@ if command -v sudo ; then
     SUDO="sudo -E"
 fi
 
-# APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends"
-APT_GET="${SUDO} apt-get -o Acquire::Retries=3 -yq"
+# APT_GET="apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends"
+APT_GET="apt-get -o Acquire::Retries=3 -yq"
+
+if ! command -v python3 ; then
+    PACKAGES="python3 ${PACKAGES}"
+fi
+
+if [ -z "${PACKAGES-}" ] ; then
+    exit 0
+fi
 
 set -e
-if [ -n "${PACKAGES}" ] ; then
-su -
 echo ">>>>>"
 echo ">>>>> APT: UPDATE.."
 echo ">>>>>"
-${APT_GET} update
+${SUDO} ${APT_GET} update
 
-if [ -n "${REPO}" ] ; then
+if [ -n "${REPO-}" ] ; then
      echo ">>>>>"
      echo ">>>>> APT: INSTALL apt-add-repository.."
      echo ">>>>>"
-     ${APT_GET} install wget software-properties-common
+     ${SUDO} ${APT_GET} install wget software-properties-common
      echo ">>>>>"
-     echo ">>>>> APT: ADD REPO.."
+     echo ">>>>> APT: ADD REPO .."
      echo ">>>>>"
      case ${REPO} in
          ppa)
@@ -34,7 +40,7 @@ if [ -n "${REPO}" ] ; then
              ;;
          llvm*)
              . $(ls /etc/os-release 2>/dev/null || echo /usr/lib/os-release)
-             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | ${SUDO} apt-key add -
+             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
              ${SUDO} apt-add-repository "deb http://apt.llvm.org/${VERSION_CODENAME}/ llvm-toolchain-${VERSION_CODENAME}${REPO##llvm} main"
              ;;
      esac
@@ -43,8 +49,7 @@ fi
 echo ">>>>>"
 echo ">>>>> APT: INSTALL: ${PACKAGES}.."
 echo ">>>>>"
-${APT_GET} install python3 ${PACKAGES}
-fi
+${SUDO} ${APT_GET} install ${PACKAGES}
 
 # Use, modification, and distribution are
 # subject to the Boost Software License, Version 1.0. (See accompanying
