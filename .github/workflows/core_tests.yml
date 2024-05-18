@@ -34,31 +34,21 @@ concurrency:
 
 jobs:
   msys2:
-    name: Windows msys2 ${{matrix.msys}} ${{matrix.toolset}}
-    runs-on: windows-latest
+    name: Gentoo
+    runs-on: ubuntu-latest
+    container: gentoo/stage3
     strategy:
       fail-fast: false
       matrix:
-        msys:
-          - mingw64
-          - mingw32
-          - ucrt64
-          - clang64
         toolset:
           - clang
           - gcc
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: Install Toolset
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{matrix.msys}}
-          pacboy: python:p ${{matrix.toolset}}:p
+      - name: Emerge packages
+        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
 
       - name: Bootstrap
         run: ./bootstrap.sh ${{matrix.toolset}}
