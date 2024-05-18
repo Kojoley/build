@@ -47,6 +47,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
 
+      - name: Emerge sync
+        run: emerge --sync
+
       - name: Emerge packages
         run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
 
