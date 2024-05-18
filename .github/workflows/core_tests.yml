@@ -54,7 +54,10 @@ jobs:
         run: getuto
 
       - name: Emerge packages
-        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}} && env >> $GITHUB_ENV
+        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
+
+      - name: Reload env
+        run: . /etc/environment && env >> $GITHUB_ENV
 
       - name: Bootstrap
         run: ./bootstrap.sh ${{matrix.toolset}}
