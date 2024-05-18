@@ -54,7 +54,7 @@ jobs:
         run: getuto
 
       - name: Emerge packages
-        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}} || echo "===" cat /var/log/emerge-fetch.log && cat /var/log/emerge-fetch.log && false
+        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
 
       - name: Bootstrap
         run: ./bootstrap.sh ${{matrix.toolset}}
