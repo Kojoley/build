@@ -50,6 +50,9 @@ jobs:
       - name: Emerge sync
         run: emerge-webrsync
 
+      - name: getuto
+        run: getuto
+
       - name: Emerge packages
         run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}} || echo "===" cat /var/log/emerge-fetch.log && cat /var/log/emerge-fetch.log && false
 
