@@ -48,10 +48,10 @@ jobs:
         uses: actions/checkout@main
 
       - name: Emerge sync
-        run: emerge --sync
+        run: emerge-webrsync
 
       - name: Emerge packages
-        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
+        run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}} || echo "===" cat /var/log/emerge-fetch.log && cat /var/log/emerge-fetch.log && false
 
       - name: Bootstrap
         run: ./bootstrap.sh ${{matrix.toolset}}
