@@ -60,7 +60,7 @@ jobs:
         run: . /etc/environment && env >> $GITHUB_ENV
 
       - name: Bootstrap
-        run: ./bootstrap.sh ${{matrix.toolset}}
+        run: . /etc/environment && ./bootstrap.sh ${{matrix.toolset}}
 
       - name: Test
         working-directory: test
