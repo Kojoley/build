@@ -53,6 +53,12 @@ jobs:
       - name: getuto
         run: getuto
 
+      - name: Emerge app-portage/gentoolkit
+        run: emerge --getbinpkgonly app-portage/gentoolkit
+
+      - name: equery belongs windres
+        run: equery belongs -f '.*windres'
+
       - name: Emerge packages
         run: emerge --getbinpkgonly dev-lang/python sys-devel/${{matrix.toolset}}
 
