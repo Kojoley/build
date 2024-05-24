@@ -16,6 +16,7 @@ import type ;
 import feature ;
 import errors ;
 import path ;
+import set ;
 import sequence ;
 import toolset ;
 import virtual-target ;
@@ -1174,6 +1175,33 @@ rule match-command-output ( kind ? : pattern : command-string )
     return $(match) ;
 }
 
+# Extracts OS from gcc/clang -dumpmachine
+rule os-from-triplet ( machine ? )
+{
+    switch $(machine:L) {
+    case *-android*   : return android ;
+    case *-cygnus*    : return cygwin ;
+    case *-ios*       : return iphone ;
+    case *-illumos*   : return solaris ;
+    case *-nto-qnx*   : return qnxnto ;
+    case *-macos*     : return darwin ;
+    case *-mingw*     : return windows ;
+    case *-msys*      : return cygwin ;
+    case *-tvos*      : return appletv ;
+    case *-win32*     : return windows ;
+    case *-*-none*    : return none ;
+    #case *-*-unknown* : return unknown ;
+    }
+
+    local all-os = [ set.difference [ feature.values <target-os> ] : none unknown elf ] ;
+    local target-os = [ MATCH -($(all-os)) : $(machine:L) ] ;
+    if $(target-os[2]) {
+        ECHO "warning:" triplet '$(machine:L)' matched multiple OS ($(target-os:J=", ")),
+                        will be treated as '$(target-os[1])' ;
+    }
+    return $(target-os[1]) ;
+}
+
 rule __test__ ( )
 {
     import assert ;
@@ -1193,4 +1221,40 @@ rule __test__ ( )
         : prepend-path-variable-command PATH : foo bar ;
 
     modules.poke os : .name : $(save-os) ;
+
+    import features/os-feature ;
+    assert.result : os-from-triplet ;
+    assert.result : os-from-triplet "" ;
+    assert.result none : os-from-triplet arm-none-none-eabi ;
+    assert.result none : os-from-triplet arm-unknown-none-eabi ;
+    assert.result aix : os-from-triplet powerpc-ibm-aix ;
+    assert.result android : os-from-triplet arm-unknown-linux-android16 ;
+    assert.result appletv : os-from-triplet aarch64-apple-tvos-sim ;
+    assert.result cygwin : os-from-triplet i686-pc-cygwin-elf ;
+    assert.result cygwin : os-from-triplet i686-pc-windows-cygnus ;
+    assert.result cygwin : os-from-triplet i686-unknown-windows-cygnus ;
+    assert.result darwin : os-from-triplet i386-apple-darwin ;
+    assert.result darwin : os-from-triplet i386-apple-darwin9 ;
+    assert.result darwin : os-from-triplet x86_64-apple-macosx10.7 ;
+    assert.result darwin : os-from-triplet x86_64-apple-macos11.0 ;
+    #assert.result emscripten : os-from-triplet wasm32-unknown-emscripten ;
+    assert.result freebsd : os-from-triplet powerpcspe-unknown-freebsd ;
+    assert.result haiku : os-from-triplet x86_64-unknown-haiku ;
+    #assert.result hurd : os-from-triplet x86_64-pc-hurd-gnu ;
+    assert.result hpux : os-from-triplet hppa64-hp-hpux11 ;
+    assert.result iphone : os-from-triplet arm64_32-apple-ios ;
+    assert.result linux : os-from-triplet ve-unknown-linux ;
+    assert.result linux : os-from-triplet armv7-suse-linux-gnueabi ;
+    assert.result netbsd : os-from-triplet armv7-netbsd-eabi ;
+    assert.result openbsd : os-from-triplet x86_64-unknown-openbsd7.4 ;
+    assert.result qnxnto : os-from-triplet aarch64-unknown-nto-qnx710 ;
+    assert.result solaris : os-from-triplet sparcv9-sun-solaris2.10 ;
+    assert.result solaris : os-from-triplet x86_64-unknown-illumos ;
+    #assert.result unknown : os-from-triplet wasm32-unknown-unknown ;
+    assert.result vxworks : os-from-triplet powerpc-wrs-vxworks ;
+    #assert.result wasi : os-from-triplet wasm32-unknown-wasi ;
+    assert.result windows : os-from-triplet i686-pc-windows-elf ;
+    assert.result windows : os-from-triplet i686-pc-windows-gnu ;
+    assert.result windows : os-from-triplet i686-pc-windows-msvc ;
+    #assert.result zos : os-from-triplet s390x-ibm-zos ;
 }

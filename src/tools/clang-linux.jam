@@ -22,6 +22,7 @@ import numbers ;
 import os ;
 import property ;
 import rc ;
+import regex ;
 import set ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
@@ -49,18 +50,29 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
 }
 
-rule init ( version ? :  command * : options * ) {
+rule init ( version ? :  command * : options * : requirements * ) {
   command = [ common.find-compiler clang-linux : clang++ : $(version) : $(command) ] ;
   local command-string = [ common.make-command-string $(command) ] ;
   if ! $(version) { # ?= operator does not short-circuit
   version ?= [ get-short-version $(command-string) ] ;
   }
 
-  local condition = [ common.check-init-parameters clang-linux
+  local condition = [ common.check-init-parameters clang-linux $(requirements)
     : version $(version) ] ;
 
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
   clang.init-flags clang-linux : $(condition) : $(version) ;
+
+    # Set the default target-os for this toolset.
+    local machine = [ SHELL "$(command-string) -dumpmachine" : strip-eol ] ;
+    local target-os = [ common.os-from-triplet $(machine:L) ] ;
+    if $(.debug-configuration) {
+        ECHO "notice:" $(condition) "::" defaults to <target-os>$(target-os:E=empty) ;
+    }
+    if $(target-os) && ! [ feature.get-values <target-os> : $(requirements) ] {
+        local conditionx = [ regex.replace $(condition) "/" "," ] ;
+        toolset.add-defaults $(conditionx)\:<target-os>$(target-os) ;
+    }
 
   # Support for gcc root as the backend, this is mainly useful for clang/gcc on Windows
   # since on Linux gcc will be the default compiler already located on the PATH.

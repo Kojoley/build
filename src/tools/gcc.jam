@@ -199,14 +199,10 @@ rule init ( version ? : command * : options * : requirement * )
             case *mingw* : flavor ?= mingw ;
             case *cygwin* : flavor ?= cygwin ;
         }
-        switch $(machine:L)
-        {
-            case *mingw*  : target-os ?= windows ;
-            case *cygwin* : target-os ?= cygwin ;
-            case *linux*  : target-os ?= linux ;
-            case *aix*    : target-os ?= aix ;
-            case *hpux*   : target-os ?= hpux ;
-            # TODO: finish this list.
+
+        target-os = [ common.os-from-triplet $(machine:L) ] ;
+        if $(.debug-configuration) {
+            ECHO "notice:" $(condition) "::" defaults to <target-os>$(target-os:E=empty) ;
         }
     }
 
